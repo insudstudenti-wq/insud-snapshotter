@@ -4,6 +4,8 @@ import { BookOpen, Award, Search, Layers, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
+import { articles } from "@/data/articles";
 import heroBg from "@/assets/hero-bg.jpg";
 
 const highlights = [
@@ -24,20 +26,6 @@ const highlights = [
   },
 ];
 
-const articles = [
-  {
-    title: "L'odissea al rallentatore dell'autostrada A20 Messina-Palermo",
-    series: "Il Sud che Inventa",
-  },
-  {
-    title: "SITAEL e l'Aerospaziale in Puglia: quando l'innovazione decolla dal Sud",
-    series: "Storie di Successo",
-  },
-  {
-    title: "Eduardo Montefusco: l'imprenditore napoletano che ha rivoluzionato il fitness in Italia",
-    series: "Storie di Successo",
-  },
-];
 
 const series = [
   {
@@ -134,18 +122,19 @@ const Lumina = () => {
           </motion.h2>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {articles.map((article, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-shadow cursor-pointer"
-              >
-                <Badge variant="secondary" className="mb-4">{article.series}</Badge>
-                <h3 className="text-lg font-semibold text-foreground mb-3">{article.title}</h3>
-                <p className="text-sm text-sky font-medium">Clicca per leggere l'articolo</p>
-              </motion.div>
+              <Link key={article.slug} to={`/lumina/${article.slug}`}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                  className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-shadow cursor-pointer h-full"
+                >
+                  <Badge variant="secondary" className="mb-4">{article.series}</Badge>
+                  <h3 className="text-lg font-semibold text-foreground mb-3">{article.title}</h3>
+                  <p className="text-sm text-sky font-medium">Clicca per leggere l'articolo →</p>
+                </motion.div>
+              </Link>
             ))}
           </div>
         </div>
