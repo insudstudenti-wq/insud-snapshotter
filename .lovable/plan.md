@@ -1,59 +1,52 @@
 
 
-# Piano: Replica fedele del sito originale INSUD
+# Articoli completi nella sezione LUMINA
 
-Ho confrontato il clone attuale con il sito originale (insud-studenti.base44.app) e ho trovato diverse differenze. Ecco cosa va sistemato:
-
----
-
-## 1. Pagina AperInsud - Sezioni mancanti e contenuti diversi
-
-**Problemi trovati:**
-- Le 3 card hanno titoli e descrizioni diversi dall'originale
-- Manca la sezione "Come Funziona" con 3 step numerati (Iscriviti, Partecipa, Connettiti)
-- Manca la sezione "Seguici su Instagram" con link a @aperinsud
-
-**Cosa faro:**
-- Aggiornare le card: "Cibo Autentico" (non "Cibo Tipico"), "Networking", "Cultura Meridionale" con i testi originali
-- Aggiungere la sezione "Come Funziona" con i 3 passaggi numerati 01/02/03
-- Aggiungere la sezione Instagram CTA con link a https://www.instagram.com/aperinsud/
+Attualmente le card degli articoli mostrano solo il titolo e un "Clicca per leggere l'articolo" che non porta da nessuna parte. L'obiettivo e' rendere ogni articolo leggibile con il suo contenuto completo.
 
 ---
 
-## 2. Pagina LUMINA - Quasi completamente da rifare
+## Approccio
 
-**Problemi trovati:**
-- Il sottotitolo dell'hero e' diverso dall'originale
-- Il testo di descrizione e' piu' breve e diverso dall'originale
-- Mancano le 3 card (Storie di Successo, Approfondimenti, Serie Tematiche)
-- Manca la sezione "I Nostri Articoli" con le card degli articoli (3 articoli con titoli reali)
-- Manca la sezione "Le Nostre Serie" con le 3 serie editoriali e i loro tag
-- Manca la CTA "Entra nella Redazione"
-
-**Cosa faro:**
-- Riscrivere la pagina LUMINA con tutte le sezioni del sito originale
-- Aggiungere le card degli articoli con i titoli reali (Autostrada A20, SITAEL, Eduardo Montefusco)
-- Aggiungere la sezione Serie con tag colorati
-- Aggiungere la CTA finale per unirsi alla redazione
+Dato che il sito non ha un backend/database, i contenuti degli articoli saranno definiti direttamente nel codice come dati statici. Cliccando su una card si aprira' una pagina dedicata all'articolo con il testo completo.
 
 ---
 
-## 3. Home page - Correzioni minori
+## Cosa verra' fatto
 
-**Problemi trovati:**
-- La descrizione della Conferenza e' leggermente diversa (manca la frase "Un evento per esplorare come il capitale puo' accelerare lo sviluppo del Sud Italia")
+### 1. Creare i contenuti degli articoli
+Aggiungere a ciascun articolo nell'array `articles` i campi: `slug`, `date`, `readTime`, `content` (testo completo in paragrafi) e `summary`.
 
-**Cosa faro:**
-- Aggiornare la descrizione della conferenza nel ProjectsSection
+I 3 articoli sono:
+- **A20 Messina-Palermo** - Analisi dell'incompiuta autostradale siciliana
+- **SITAEL Puglia** - Storia dell'azienda aerospaziale pugliese
+- **Eduardo Montefusco** - Profilo dell'imprenditore del fitness
+
+I contenuti saranno scritti in modo realistico e coerente con il tono editoriale di LUMINA.
+
+### 2. Creare la pagina ArticlePage
+Un nuovo componente `src/pages/ArticlePage.tsx` che:
+- Riceve lo slug dall'URL (es. `/lumina/a20-messina-palermo`)
+- Mostra l'articolo con: titolo, serie (badge), data, tempo di lettura, contenuto formattato
+- Include un pulsante "Torna a LUMINA" per tornare indietro
+- Usa lo stesso layout (Navbar + Footer) e stile del sito
+
+### 3. Aggiornare il routing
+Aggiungere in `App.tsx` la route `/lumina/:slug` che punta ad `ArticlePage`.
+
+### 4. Collegare le card agli articoli
+In `Lumina.tsx`, trasformare le card degli articoli in link che puntano a `/lumina/{slug}`.
 
 ---
 
 ## Dettagli tecnici
 
-**File da modificare:**
-- `src/pages/AperInsud.tsx` - Aggiornare card + aggiungere sezioni "Come Funziona" e "Instagram CTA"
-- `src/pages/Lumina.tsx` - Riscrittura quasi completa con tutte le sezioni mancanti
-- `src/components/ProjectsSection.tsx` - Aggiornare descrizione conferenza
+**File nuovi:**
+- `src/pages/ArticlePage.tsx` - Pagina di lettura articolo
 
-**Nessuna nuova dipendenza necessaria** - tutto si realizza con i componenti gia' disponibili (framer-motion, lucide-react, tailwind).
+**File modificati:**
+- `src/pages/Lumina.tsx` - Aggiungere slug/contenuti agli articoli + link nelle card
+- `src/App.tsx` - Aggiungere route `/lumina/:slug`
+
+**Nessuna nuova dipendenza necessaria.**
 
