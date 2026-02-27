@@ -28,7 +28,7 @@ const projects = [
     image: conferenzaBanner,
     title: "Conferenza: Private Equity & Venture Capital",
     description:
-      "Il ruolo del Private Equity e del Venture Capital nella crescita del Mezzogiorno.",
+      "Un evento per esplorare come il capitale può accelerare lo sviluppo del Sud Italia. Il ruolo del Private Equity e del Venture Capital nella crescita del Mezzogiorno.",
     link: "https://conference-seat-booker.lovable.app/",
     isInternal: false,
     darkBg: false,
