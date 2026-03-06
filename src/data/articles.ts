@@ -2,6 +2,7 @@ export interface Article {
   slug: string;
   title: string;
   series: string;
+  author: string;
   date: string;
   readTime: string;
   summary: string;
@@ -14,6 +15,7 @@ export const articles: Article[] = [
     title: "L'odissea al rallentatore dell'autostrada A20 Messina-Palermo",
     series: "Ops… qualcosa è andato storto",
     date: "15 Gennaio 2025",
+    author: "Gaia Sottile",
     readTime: "8 min",
     summary: "Un'analisi dell'incompiuta autostradale siciliana che da decenni rappresenta il simbolo delle infrastrutture mancate nel Mezzogiorno.",
     content: [
@@ -32,6 +34,7 @@ export const articles: Article[] = [
     title: "SITAEL e l'Aerospaziale in Puglia: quando l'innovazione decolla dal Sud",
     series: "Storie di Successo",
     date: "22 Gennaio 2025",
+    author: "Marcello Scarlatella",
     readTime: "7 min",
     summary: "La storia di SITAEL, l'azienda aerospaziale pugliese che sta portando il Sud Italia nello spazio con tecnologie all'avanguardia.",
     content: [
@@ -50,6 +53,7 @@ export const articles: Article[] = [
     title: "Eduardo Montefusco: l'imprenditore napoletano che ha rivoluzionato il fitness in Italia",
     series: "Storie di Successo",
     date: "5 Febbraio 2025",
+    author: "Anna Rubinaccio",
     readTime: "6 min",
     summary: "Il profilo di Eduardo Montefusco, l'imprenditore napoletano che ha trasformato il settore del fitness italiano con un modello innovativo.",
     content: [
