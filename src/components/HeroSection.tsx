@@ -44,7 +44,7 @@ const HeroSection = () => {
           transition={{ duration: 0.7, delay: 0.4 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <a href="https://forms.gle/tkzeKBqUbc6Ltkzt9" target="_blank" rel="noopener noreferrer">
+          <a href="https://forms.gle/mSLxxMW1ooQmPK2y8" target="_blank" rel="noopener noreferrer">
             <Button
               size="lg"
               className="bg-primary-foreground text-navy hover:bg-primary-foreground/90 font-semibold rounded-full px-8 gap-2"
@@ -56,7 +56,7 @@ const HeroSection = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 rounded-full px-8 font-semibold"
+              className="border-primary-foreground/40 text-navy bg-primary-foreground hover:bg-primary-foreground/90 rounded-full px-8 font-semibold"
             >
               Scopri i Nostri Progetti
             </Button>

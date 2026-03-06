@@ -186,7 +186,7 @@ const Lumina = () => {
             <p className="text-primary-foreground/70 text-lg max-w-xl mx-auto mb-8">
               Hai una storia da raccontare o vuoi contribuire con i tuoi articoli? Unisciti al team di LUMINA e aiutaci a illuminare le eccellenze del Sud
             </p>
-            <a href="https://forms.gle/tkzeKBqUbc6Ltkzt9" target="_blank" rel="noopener noreferrer">
+            <a href="https://forms.gle/mSLxxMW1ooQmPK2y8" target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
                 className="bg-primary-foreground text-navy hover:bg-primary-foreground/90 font-semibold rounded-full px-10 gap-2"

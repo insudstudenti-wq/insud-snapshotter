@@ -52,7 +52,7 @@ const Navbar = () => {
           >
             <Instagram className="w-5 h-5" />
           </a>
-          <a href="https://forms.gle/tkzeKBqUbc6Ltkzt9" target="_blank" rel="noopener noreferrer">
+          <a href="https://forms.gle/mSLxxMW1ooQmPK2y8" target="_blank" rel="noopener noreferrer">
             <Button
               size="sm"
               className="bg-primary-foreground text-navy hover:bg-primary-foreground/90 font-semibold rounded-full px-5"
@@ -85,7 +85,7 @@ const Navbar = () => {
             </Link>
           ))}
           <a
-            href="https://forms.gle/tkzeKBqUbc6Ltkzt9"
+            href="https://forms.gle/mSLxxMW1ooQmPK2y8"
             target="_blank"
             rel="noopener noreferrer"
             className="block mt-2"
