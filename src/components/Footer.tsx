@@ -8,7 +8,7 @@ const Footer = () => {
           © 2025 INSUD - Studenti per l'Innovazione del Sud
         </p>
         <a
-          href="https://instagram.com"
+          href="https://www.instagram.com/insud.bocconi/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary-foreground/50 hover:text-primary-foreground transition-colors"
