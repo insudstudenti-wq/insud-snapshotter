@@ -53,6 +53,7 @@ export const articles: Article[] = [
     title: "Eduardo Montefusco: l'imprenditore napoletano che ha rivoluzionato il fitness in Italia",
     series: "Storie di Successo",
     date: "5 Febbraio 2025",
+    author: "Anna Rubinaccio",
     readTime: "6 min",
     summary: "Il profilo di Eduardo Montefusco, l'imprenditore napoletano che ha trasformato il settore del fitness italiano con un modello innovativo.",
     content: [
