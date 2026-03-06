@@ -15,6 +15,7 @@ export const articles: Article[] = [
     title: "L'odissea al rallentatore dell'autostrada A20 Messina-Palermo",
     series: "Ops… qualcosa è andato storto",
     date: "15 Gennaio 2025",
+    author: "Gaia Sottile",
     readTime: "8 min",
     summary: "Un'analisi dell'incompiuta autostradale siciliana che da decenni rappresenta il simbolo delle infrastrutture mancate nel Mezzogiorno.",
     content: [
