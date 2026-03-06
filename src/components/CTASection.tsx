@@ -18,7 +18,7 @@ const CTASection = () => {
           <p className="text-primary-foreground/70 text-lg max-w-xl mx-auto mb-10">
             Unisciti a noi e contribuisci all'innovazione del Sud. Insieme possiamo fare la differenza!
           </p>
-          <a href="https://forms.gle/tkzeKBqUbc6Ltkzt9" target="_blank" rel="noopener noreferrer">
+          <a href="https://forms.gle/mSLxxMW1ooQmPK2y8" target="_blank" rel="noopener noreferrer">
             <Button
               size="lg"
               className="bg-primary-foreground text-navy hover:bg-primary-foreground/90 font-semibold rounded-full px-10 gap-2"

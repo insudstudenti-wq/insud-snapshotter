@@ -85,7 +85,7 @@ const Navbar = () => {
             </Link>
           ))}
           <a
-            href="https://forms.gle/tkzeKBqUbc6Ltkzt9"
+            href="https://forms.gle/mSLxxMW1ooQmPK2y8"
             target="_blank"
             rel="noopener noreferrer"
             className="block mt-2"

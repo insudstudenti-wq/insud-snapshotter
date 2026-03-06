@@ -56,7 +56,7 @@ const HeroSection = () => {
             <Button
               size="lg"
               variant="outline"
-              className="border-primary-foreground/40 text-primary-foreground hover:bg-primary-foreground/10 rounded-full px-8 font-semibold"
+              className="border-primary-foreground/40 text-navy bg-primary-foreground hover:bg-primary-foreground/90 rounded-full px-8 font-semibold"
             >
               Scopri i Nostri Progetti
             </Button>
