@@ -2,6 +2,7 @@ export interface Article {
   slug: string;
   title: string;
   series: string;
+  author: string;
   date: string;
   readTime: string;
   summary: string;
