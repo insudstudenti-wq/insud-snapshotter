@@ -34,6 +34,7 @@ export const articles: Article[] = [
     title: "SITAEL e l'Aerospaziale in Puglia: quando l'innovazione decolla dal Sud",
     series: "Storie di Successo",
     date: "22 Gennaio 2025",
+    author: "Marcello Scarlatella",
     readTime: "7 min",
     summary: "La storia di SITAEL, l'azienda aerospaziale pugliese che sta portando il Sud Italia nello spazio con tecnologie all'avanguardia.",
     content: [
