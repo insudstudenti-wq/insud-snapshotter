@@ -44,7 +44,7 @@ const Navbar = () => {
             </Link>
           ))}
           <a
-            href="https://www.instagram.com/insud.bocconi/"
+            href="https://www.instagram.com/insud.bocconi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
             target="_blank"
             rel="noopener noreferrer"
             className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
