@@ -76,7 +76,7 @@ const ProjectsSection = () => {
                   <img
                     src={project.image}
                     alt={project.title}
-                    className={project.darkBg ? "max-h-full max-w-[70%] object-contain" : "w-full h-full object-cover object-bottom"}
+                    className={project.darkBg ? "max-h-full max-w-[85%] object-contain" : "w-full h-full object-cover object-bottom"}
                   />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
