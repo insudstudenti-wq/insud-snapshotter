@@ -69,14 +69,14 @@ const ProjectsSection = () => {
                 className="group bg-card border border-border rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col"
               >
                 <div
-                  className={`h-48 flex items-center justify-center p-6 ${
-                    project.darkBg ? "bg-navy-gradient" : "bg-muted"
+                  className={`h-48 flex items-center justify-center ${
+                    project.darkBg ? "bg-navy-gradient p-6" : ""
                   }`}
                 >
                   <img
                     src={project.image}
                     alt={project.title}
-                    className="max-h-full max-w-[70%] object-contain"
+                    className={project.darkBg ? "max-h-full max-w-[70%] object-contain" : "w-full h-full object-cover"}
                   />
                 </div>
                 <div className="p-6 flex flex-col flex-1">
