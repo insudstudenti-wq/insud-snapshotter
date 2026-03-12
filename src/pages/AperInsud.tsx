@@ -139,7 +139,7 @@ const AperInsud = () => {
             <p className="text-primary-foreground/70 text-lg max-w-xl mx-auto mb-8">
               Rimani aggiornato sui prossimi eventi AperInsud, scopri foto e video degli aperitivi passati e non perderti le nostre iniziative
             </p>
-            <a href="https://www.instagram.com/aperinsud/" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.instagram.com/insud.bocconi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">
               <Button
                 size="lg"
                 className="bg-primary-foreground text-navy hover:bg-primary-foreground/90 font-semibold rounded-full px-10 gap-2"
