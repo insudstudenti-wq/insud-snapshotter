@@ -19,9 +19,7 @@ const Navbar = () => {
       <div className="container mx-auto flex items-center justify-between h-16 px-4 md:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-xs font-bold">
-            IN
-          </div>
+          <img src={insudLogo} alt="INSUD Logo" className="h-10 w-auto" />
           <div>
             <span className="text-primary-foreground font-bold text-lg tracking-tight">INSUD</span>
             <p className="text-primary-foreground/60 text-[10px] leading-tight -mt-0.5">
