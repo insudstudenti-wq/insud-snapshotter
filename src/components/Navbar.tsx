@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import insudLogo from "@/assets/insud-logo-white.png";
 
 const navLinks = [
   { label: "Home", to: "/" },
