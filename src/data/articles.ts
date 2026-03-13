@@ -1,3 +1,8 @@
+export interface ArticleLink {
+  label: string;
+  url: string;
+}
+
 export interface Article {
   slug: string;
   title: string;
@@ -6,6 +11,7 @@ export interface Article {
   date: string;
   summary: string;
   content: string[];
+  links?: { title: string; items: ArticleLink[] };
 }
 
 export function getReadTime(article: Article): string {
