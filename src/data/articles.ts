@@ -4,9 +4,14 @@ export interface Article {
   series: string;
   author: string;
   date: string;
-  readTime: string;
   summary: string;
   content: string[];
+}
+
+export function getReadTime(article: Article): string {
+  const words = article.content.join(" ").split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 220));
+  return `${minutes} min`;
 }
 
 export const articles: Article[] = [
@@ -16,7 +21,7 @@ export const articles: Article[] = [
     series: "Ops… qualcosa è andato storto",
     date: "15 Gennaio 2025",
     author: "Gaia Sottile",
-    readTime: "8 min",
+    
     summary: "Un'analisi dell'incompiuta autostradale siciliana che da decenni rappresenta il simbolo delle infrastrutture mancate nel Mezzogiorno.",
     content: [
       "L'autostrada A20 Messina-Palermo è una delle storie infrastrutturali più emblematiche del Sud Italia. Un'opera che avrebbe dovuto collegare in modo rapido e sicuro le due principali città siciliane, ma che a distanza di decenni dalla sua concezione resta ancora un cantiere a cielo aperto, un simbolo di promesse non mantenute e di una burocrazia che sembra muoversi più lentamente del traffico che dovrebbe alleviare.",
@@ -35,7 +40,7 @@ export const articles: Article[] = [
     series: "Il Sud che Inventa",
     date: "22 Gennaio 2025",
     author: "Marcello Scarlatella",
-    readTime: "7 min",
+    
     summary: "La storia di SITAEL, l'azienda aerospaziale pugliese che sta portando il Sud Italia nello spazio con tecnologie all'avanguardia.",
     content: [
       "Nel cuore della Puglia, tra gli ulivi secolari e il barocco leccese, si nasconde una delle realtà più avanzate dell'industria aerospaziale europea. SITAEL, con sede a Mola di Bari, è la più grande azienda privata italiana nel settore spaziale e rappresenta la dimostrazione vivente che l'innovazione di frontiera può nascere e prosperare nel Mezzogiorno d'Italia.",
@@ -54,7 +59,7 @@ export const articles: Article[] = [
     series: "Storie di Successo",
     date: "5 Febbraio 2025",
     author: "Anna Rubinaccio",
-    readTime: "6 min",
+    
     summary: "Il profilo di Eduardo Montefusco, l'imprenditore napoletano che ha trasformato il settore del fitness italiano con un modello innovativo.",
     content: [
       "Napoli è una città che non smette mai di sorprendere. Tra le sue strade caotiche e affascinanti, tra la tradizione culinaria più celebre al mondo e un patrimonio culturale inestimabile, nascono storie di imprenditorialità che sfidano ogni aspettativa. Quella di Eduardo Montefusco è una di queste: un giovane napoletano che ha saputo trasformare la sua passione per il fitness in un impero imprenditoriale, dimostrando che dal Sud si può innovare e conquistare il mercato nazionale.",
