@@ -43,6 +43,11 @@ const series = [
     description: "Analizziamo i fallimenti infrastrutturali e progettuali del Sud per capire cosa non ha funzionato e imparare dagli errori del passato.",
     tags: ["Infrastrutture", "Analisi", "Lezioni"],
   },
+  {
+    title: "Approfondimenti",
+    description: "Analisi e riflessioni su temi chiave della vita civica e sociale del Mezzogiorno: diritti, partecipazione e cittadinanza attiva.",
+    tags: ["Diritti", "Società", "Partecipazione"],
+  },
 ];
 
 const Lumina = () => {
