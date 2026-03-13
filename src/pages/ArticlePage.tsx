@@ -55,7 +55,7 @@ const ArticlePage = () => {
                 <Calendar className="w-4 h-4" /> {article.date}
               </span>
               <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" /> {article.readTime} di lettura
+                <Clock className="w-4 h-4" /> {getReadTime(article)} di lettura
               </span>
             </div>
 
