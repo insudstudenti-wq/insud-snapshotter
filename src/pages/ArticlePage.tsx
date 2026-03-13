@@ -69,6 +69,26 @@ const ArticlePage = () => {
               ))}
             </div>
 
+            {article.links && (
+              <div className="mt-10 p-6 bg-muted/50 border border-border rounded-2xl">
+                <h3 className="text-lg font-semibold text-foreground mb-4">{article.links.title}</h3>
+                <div className="flex flex-col gap-3">
+                  {article.links.items.map((link) => (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sky hover:underline font-medium transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4 shrink-0" />
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-16 pt-8 border-t border-border text-center">
               <Link to="/lumina">
                 <Button variant="outline" className="gap-2 rounded-full">
