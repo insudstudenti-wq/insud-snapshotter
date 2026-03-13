@@ -21,7 +21,7 @@ export const articles: Article[] = [
     series: "Ops… qualcosa è andato storto",
     date: "15 Gennaio 2025",
     author: "Gaia Sottile",
-    readTime: "8 min",
+    
     summary: "Un'analisi dell'incompiuta autostradale siciliana che da decenni rappresenta il simbolo delle infrastrutture mancate nel Mezzogiorno.",
     content: [
       "L'autostrada A20 Messina-Palermo è una delle storie infrastrutturali più emblematiche del Sud Italia. Un'opera che avrebbe dovuto collegare in modo rapido e sicuro le due principali città siciliane, ma che a distanza di decenni dalla sua concezione resta ancora un cantiere a cielo aperto, un simbolo di promesse non mantenute e di una burocrazia che sembra muoversi più lentamente del traffico che dovrebbe alleviare.",
