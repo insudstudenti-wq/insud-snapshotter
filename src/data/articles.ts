@@ -4,9 +4,14 @@ export interface Article {
   series: string;
   author: string;
   date: string;
-  readTime: string;
   summary: string;
   content: string[];
+}
+
+export function getReadTime(article: Article): string {
+  const words = article.content.join(" ").split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 220));
+  return `${minutes} min`;
 }
 
 export const articles: Article[] = [
