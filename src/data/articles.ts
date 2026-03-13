@@ -1,3 +1,8 @@
+export interface ArticleLink {
+  label: string;
+  url: string;
+}
+
 export interface Article {
   slug: string;
   title: string;
@@ -6,6 +11,7 @@ export interface Article {
   date: string;
   summary: string;
   content: string[];
+  links?: { title: string; items: ArticleLink[] };
 }
 
 export function getReadTime(article: Article): string {
@@ -101,5 +107,14 @@ export const articles: Article[] = [
       "In un momento storico in cui si interviene sulla struttura stessa della nostra Costituzione, limitare nei fatti l'accesso al voto di milioni di cittadini rischia di svuotare di significato uno degli strumenti più alti della partecipazione democratica. Se votare è un diritto fondamentale, non può trasformarsi in un privilegio legato alla possibilità economica o logistica di rientrare nel proprio comune di residenza.",
       "Gli studenti fuori sede, i lavoratori e tutti coloro che vivono lontano da casa non chiedono facilitazioni, ma pari condizioni di esercizio di un diritto costituzionale.",
     ],
+    links: {
+      title: "Diventa Rappresentante di Lista",
+      items: [
+        { label: "Movimento 5 Stelle", url: "https://www.movimento5stelle.eu/diventa-rappresentante-di-lista/" },
+        { label: "Giusto di Re No", url: "https://iscriviti.giustodireno.it/rappresentante-lista/" },
+        { label: "Più Europa", url: "https://www.piueuropa.eu/diventa_rappresentante_di_lista_ref_giustizia" },
+        { label: "Partito Democratico", url: "https://partitodemocratico.it/referendum-rappresentanti-lista/" },
+      ],
+    },
   },
 ];
