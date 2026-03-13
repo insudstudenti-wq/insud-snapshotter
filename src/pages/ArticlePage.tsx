@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { articles } from "@/data/articles";
+import { articles, getReadTime } from "@/data/articles";
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
