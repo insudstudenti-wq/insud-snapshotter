@@ -40,7 +40,7 @@ export const articles: Article[] = [
     series: "Il Sud che Inventa",
     date: "22 Gennaio 2025",
     author: "Marcello Scarlatella",
-    readTime: "7 min",
+    
     summary: "La storia di SITAEL, l'azienda aerospaziale pugliese che sta portando il Sud Italia nello spazio con tecnologie all'avanguardia.",
     content: [
       "Nel cuore della Puglia, tra gli ulivi secolari e il barocco leccese, si nasconde una delle realtà più avanzate dell'industria aerospaziale europea. SITAEL, con sede a Mola di Bari, è la più grande azienda privata italiana nel settore spaziale e rappresenta la dimostrazione vivente che l'innovazione di frontiera può nascere e prosperare nel Mezzogiorno d'Italia.",
