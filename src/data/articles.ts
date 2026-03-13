@@ -32,7 +32,7 @@ export const articles: Article[] = [
   {
     slug: "sitael-aerospaziale-puglia",
     title: "SITAEL e l'Aerospaziale in Puglia: quando l'innovazione decolla dal Sud",
-    series: "Storie di Successo",
+    series: "Il Sud che Inventa",
     date: "22 Gennaio 2025",
     author: "Marcello Scarlatella",
     readTime: "7 min",
