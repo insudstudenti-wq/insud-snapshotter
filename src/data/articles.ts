@@ -59,7 +59,7 @@ export const articles: Article[] = [
     series: "Storie di Successo",
     date: "5 Febbraio 2025",
     author: "Anna Rubinaccio",
-    readTime: "6 min",
+    
     summary: "Il profilo di Eduardo Montefusco, l'imprenditore napoletano che ha trasformato il settore del fitness italiano con un modello innovativo.",
     content: [
       "Napoli è una città che non smette mai di sorprendere. Tra le sue strade caotiche e affascinanti, tra la tradizione culinaria più celebre al mondo e un patrimonio culturale inestimabile, nascono storie di imprenditorialità che sfidano ogni aspettativa. Quella di Eduardo Montefusco è una di queste: un giovane napoletano che ha saputo trasformare la sua passione per il fitness in un impero imprenditoriale, dimostrando che dal Sud si può innovare e conquistare il mercato nazionale.",
