@@ -8,6 +8,7 @@ import AperInsud from "./pages/AperInsud";
 import Lumina from "./pages/Lumina";
 import ArticlePage from "./pages/ArticlePage";
 import NotFound from "./pages/NotFound";
+import ArticleSubmission from './pages/ArticleSubmission';
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/lumina" element={<Lumina />} />
           <Route path="/lumina/:slug" element={<ArticlePage />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/lumina/submit" element={<ArticleSubmission />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
