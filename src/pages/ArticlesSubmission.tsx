@@ -15,17 +15,7 @@ interface ArticleFormData {
   tags: string;
 }
 
-interface ArticleSubmissionPayload {
-  title: string;
-  author: string;
-  content: string;
-  category: string;
-  tags: string[];
-  publishedAt: string;
-  status: 'pending_review' | 'published' | 'rejected';
-}
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+const API_BASE_URL = 'https://insud.eu';
 
 export default function ArticleSubmission() {
   const navigate = useNavigate();
@@ -39,49 +29,35 @@ export default function ArticleSubmission() {
     tags: '',
   });
 
-  const submitToApi = async (article: ArticleSubmissionPayload): Promise<{ success: boolean; id?: string; error?: string }> => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
     try {
+      const articleData = {
+        ...formData,
+        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+        publishedAt: new Date().toISOString(),
+        status: 'pending_review',
+      };
+
       const response = await fetch(`${API_BASE_URL}/api/articles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(article),
+        body: JSON.stringify(articleData),
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      return { success: true, id: data.id };
-    } catch (error) {
-      console.error('Failed to submit article:', error);
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
-      };
-    }
-  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    const articleData: ArticleSubmissionPayload = {
-      ...formData,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      publishedAt: new Date().toISOString(),
-      status: 'pending_review',
-    };
-
-    const result = await submitToApi(articleData);
-
-    if (result.success) {
       toast({
         title: "Article Submitted Successfully",
-        description: `Your article has been sent for review (ID: ${result.id}) and will be published in the Lumina section.`,
+        description: `Your article has been sent for review (ID: ${data.id}) and will be published in the Lumina section.`,
       });
 
       setFormData({
@@ -91,15 +67,16 @@ export default function ArticleSubmission() {
         category: 'Lumina',
         tags: '',
       });
-    } else {
+
+    } catch (error) {
       toast({
         title: "Submission Failed",
-        description: result.error || "There was an error submitting your article. Please try again.",
+        description: "There was an error submitting your article. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
