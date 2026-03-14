@@ -23,7 +23,7 @@ const HeroSection = () => {
           transition={{ duration: 0.7 }}
           className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground leading-tight mb-6"
         >
-          Innovazione che parte{" "}
+          InSud: Innovazione che parte{" "}
           <br />
           dal <span className="text-gradient">Sud</span>
         </motion.h1>
@@ -34,7 +34,7 @@ const HeroSection = () => {
           transition={{ duration: 0.7, delay: 0.2 }}
           className="text-primary-foreground/75 text-lg md:text-xl max-w-2xl mx-auto mb-10"
         >
-          Un'associazione studentesca dedicata alla crescita e allo sviluppo del
+          InSud è un'associazione studentesca dedicata alla crescita e allo sviluppo del
           Meridione attraverso progetti innovativi e collaborazione.
         </motion.p>
 
