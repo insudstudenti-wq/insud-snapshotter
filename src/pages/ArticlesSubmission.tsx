@@ -15,6 +15,18 @@ interface ArticleFormData {
   tags: string;
 }
 
+interface ArticleSubmissionPayload {
+  title: string;
+  author: string;
+  content: string;
+  category: string;
+  tags: string[];
+  publishedAt: string;
+  status: 'pending_review' | 'published' | 'rejected';
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
 export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -27,31 +39,51 @@ export default function ArticleSubmission() {
     tags: '',
   });
 
+  const submitToApi = async (article: ArticleSubmissionPayload): Promise<{ success: boolean; id?: string; error?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/articles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(article),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return { success: true, id: data.id };
+    } catch (error) {
+      console.error('Failed to submit article:', error);
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+      };
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      // Simulate API call - replace with actual endpoint
-      const articleData = {
-        ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        publishedAt: new Date().toISOString(),
-        status: 'pending_review',
-      };
+    const articleData: ArticleSubmissionPayload = {
+      ...formData,
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      publishedAt: new Date().toISOString(),
+      status: 'pending_review',
+    };
 
-      // TODO: Replace with actual API endpoint
-      console.log('Article submitted:', articleData);
-      
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    const result = await submitToApi(articleData);
 
+    if (result.success) {
       toast({
         title: "Article Submitted Successfully",
-        description: "Your article has been sent for review and will be published in the Lumina section.",
+        description: `Your article has been sent for review (ID: ${result.id}) and will be published in the Lumina section.`,
       });
 
-      // Reset form
       setFormData({
         title: '',
         author: '',
@@ -59,16 +91,15 @@ export default function ArticleSubmission() {
         category: 'Lumina',
         tags: '',
       });
-
-    } catch (error) {
+    } else {
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your article. Please try again.",
+        description: result.error || "There was an error submitting your article. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+
+    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
