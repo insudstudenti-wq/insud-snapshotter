@@ -23,7 +23,7 @@ const Navbar = () => {
           <div>
             <span className="text-primary-foreground font-bold text-lg tracking-tight">INSUD</span>
             <p className="text-primary-foreground/60 text-[10px] leading-tight -mt-0.5">
-              Studenti per l'Innovazione del Sud
+              InSud: L'associazione di studenti per l'Innovazione del Sud d'Italia
             </p>
           </div>
         </Link>
@@ -47,6 +47,7 @@ const Navbar = () => {
             href="https://www.instagram.com/insud.bocconi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
             target="_blank"
             rel="noopener noreferrer"
+            aria-label="Visita il profilo Instagram di InSud Bocconi"
             className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
           >
             <Instagram className="w-5 h-5" />
