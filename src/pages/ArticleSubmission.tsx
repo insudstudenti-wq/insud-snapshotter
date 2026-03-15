@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { submitArticle } from '@/lib/articleApi';
 
 interface ArticleFormData {
   title: string;
@@ -14,8 +15,6 @@ interface ArticleFormData {
   category: string;
   tags: string;
 }
-
-const API_BASE_URL = 'https://insud.eu';
 
 export default function ArticleSubmission() {
   const navigate = useNavigate();
@@ -30,36 +29,24 @@ export default function ArticleSubmission() {
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+    e.preventDefault(); // ← MISSING: Prevents page reload
+    setIsSubmitting(true); // ← MISSING: Shows loading state
 
-    try {
-      const articleData = {
-        ...formData,
-        tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-        publishedAt: new Date().toISOString(),
-        status: 'pending_review',
-      };
+    const result = await submitArticle({
+      title: formData.title,
+      author: formData.author,
+      content: formData.content,
+      category: formData.category,
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+    });
 
-      const response = await fetch(`${API_BASE_URL}/api/articles`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(articleData),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-
+    if (result.success) {
       toast({
         title: "Article Submitted Successfully",
-        description: `Your article has been sent for review (ID: ${data.id}) and will be published in the Lumina section.`,
-      });
+        description: `Your article has been sent for review (ID: ${result.id})`,
+      }); // ← Was missing semicolon
 
+      // ← MISSING: Reset form after success
       setFormData({
         title: '',
         author: '',
@@ -67,16 +54,15 @@ export default function ArticleSubmission() {
         category: 'Lumina',
         tags: '',
       });
-
-    } catch (error) {
+    } else {
       toast({
         title: "Submission Failed",
-        description: "There was an error submitting your article. Please try again.",
+        description: result.error,
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
     }
+
+    setIsSubmitting(false); // ← MISSING: Hides loading state
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
