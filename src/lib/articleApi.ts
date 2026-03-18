@@ -8,13 +8,14 @@ const generateSlug = (title: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-// Submit article (immediately published)
+// Submit article (immediately published with custom timestamp)
 export async function submitArticle(data: {
   title: string;
   author: string;
   content: string;
   category?: string;
   tags: string[];
+  publishedAt: string; // Custom timestamp from form
 }) {
   try {
     // 1. Handle author (create if new)
@@ -51,7 +52,7 @@ export async function submitArticle(data: {
       if (category) categoryId = category.id;
     }
 
-    // 3. Create article (published immediately)
+    // 3. Create article with custom timestamp
     const slug = `${generateSlug(data.title)}-${Date.now()}`;
     const excerpt = data.content.substring(0, 200) + '...';
     
@@ -64,7 +65,7 @@ export async function submitArticle(data: {
         excerpt: excerpt,
         author_id: authorId,
         category_id: categoryId,
-        published_at: new Date().toISOString(),
+        published_at: data.publishedAt, // Uses your manual timestamp
       })
       .select('id')
       .single();
