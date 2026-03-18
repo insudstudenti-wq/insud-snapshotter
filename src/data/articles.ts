@@ -124,7 +124,7 @@ export const articles: Article[] = [
     date: "18 Marzo 2026",
     author: "Redazione INSUD",
     
-    summary: "",
+    summary: "La pizzica: da antico rito di liberazione a icona globale capace di unire radici salentine e modernità.",
     content: [
       "C’è chi immagina il futuro tra i grattacieli di Milano e chi lo trova battendo i piedi tra le strade del Salento. La storia della pizzica, danza popolare pugliese, è quella di un Sud che ha saputo riscrivere se stesso. Da espressione legata a cortili e feste contadine a fenomeno internazionale, la pizzica è oggi un linguaggio culturale identitario capace di unire memoria etradizione a modernità ed evoluzione.",
       "L’origine della pizzica risiede nel tarantismo, un fenomeno tipico del Sud Italia secondo il quale si credeva che alcune persone se morse dalla “taranta”, un ragno velenoso, avrebbero avuto bisogno di una cura. In realtà, il morso rappresentava una metafora di un malessere interiore o di una sofferenza, che spesso era legata a una società patriarcale, nella quale le donne erano considerate “di proprietà” dell’uomo. La cura coincideva con la danza: la comunità si riuniva attorno alla “tarantata”, suonando tamburelli e violini affinché, attraverso il movimento e il ritmo, il corpo non espelleva simbolicamente il “veleno”. Il rito diventava così una terapia collettiva e un atto di liberazione condivisa, capace di riscattare il malessere dei più disagiati della società meridionale.",
