@@ -352,15 +352,33 @@ export async function updateArticleTags(articleId: number, tags: string[]) {
   }
 }
 
-// Delete article
+// Delete article (and its tag associations)
 export async function deleteArticle(articleId: number) {
-  const { error } = await supabase
-    .from('articles')
-    .delete()
-    .eq('id', articleId);
+  try {
+    // 1. First delete tag associations (junction table)
+    const { error: tagsError } = await supabase
+      .from('article_tags')
+      .delete()
+      .eq('article_id', articleId);
 
-  if (error) throw error;
-  return { success: true };
+    if (tagsError) throw tagsError;
+
+    // 2. Then delete the article
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', articleId);
+
+    if (error) throw error;
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Delete error:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    };
+  }
 }
 
 // Get all tags
