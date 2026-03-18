@@ -42,18 +42,18 @@ export default function ArticleSubmission() {
 
     if (result.success) {
       toast({
-        title: "Article Submitted Successfully",
-        description: `Your article has been sent for review (ID: ${result.id})`,
-      }); // ← Was missing semicolon
-
-      // ← MISSING: Reset form after success
-      setFormData({
-        title: '',
-        author: '',
-        content: '',
-        category: 'Lumina',
-        tags: '',
-      });
+    title: "Article Published",
+    description: `Your article has been published successfully (ID: ${result.id})`,
+  });
+  
+  // Reset form
+  setFormData({
+    title: '',
+    author: '',
+    content: '',
+    category: 'Lumina',
+    tags: '',
+  });
     } else {
       toast({
         title: "Submission Failed",
@@ -175,7 +175,7 @@ export default function ArticleSubmission() {
 
         <div className="mt-8 text-center">
           <p className="text-sm text-slate-500">
-            This page is only accessible via direct link. Articles are reviewed before publication.
+            This page is only accessible via direct link.
           </p>
         </div>
       </div>
