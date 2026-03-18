@@ -107,68 +107,152 @@ export async function submitArticle(data: {
   }
 }
 
-// Get all articles (NO status filter - removed because you don't have status column)
+// Get all articles
 export async function getArticles(): Promise<ArticleWithRelations[]> {
-  const { data, error } = await supabase
+  // First, get articles with author and category
+  const { data: articles, error: articlesError } = await supabase
     .from('articles')
     .select(`
       *,
       author:authors(id, name),
-      category:categories(id, name, slug),
-      tags:article_tags(tag:id, tag:name, tag:slug)
+      category:categories(id, name, slug)
     `)
     .order('published_at', { ascending: false });
 
-  if (error) {
-    console.error('getArticles error:', error);
-    throw error;
+  if (articlesError) {
+    console.error('getArticles error:', articlesError);
+    throw articlesError;
   }
 
-  return (data || []).map((article: any) => ({
+  if (!articles || articles.length === 0) {
+    return [];
+  }
+
+  // Get all article IDs
+  const articleIds = articles.map(a => a.id);
+
+  // Fetch tags for these articles in a separate query
+  const { data: articleTags, error: tagsError } = await supabase
+    .from('article_tags')
+    .select(`
+      article_id,
+      tag:tags(id, name, slug)
+    `)
+    .in('article_id', articleIds);
+
+  if (tagsError) {
+    console.error('getArticles tags error:', tagsError);
+  }
+
+  // Group tags by article
+  const tagsByArticle: Record<number, any[]> = {};
+  if (articleTags) {
+    articleTags.forEach((at: any) => {
+      if (!tagsByArticle[at.article_id]) {
+        tagsByArticle[at.article_id] = [];
+      }
+      if (at.tag) {
+        tagsByArticle[at.article_id].push(at.tag);
+      }
+    });
+  }
+
+  // Combine articles with their tags
+  return articles.map((article: any) => ({
     ...article,
-    tags: article.tags?.map((t: any) => t.tag) || [],
+    tags: tagsByArticle[article.id] || [],
   }));
 }
 
 // Get single article by slug
 export async function getArticleBySlug(slug: string): Promise<ArticleWithRelations | null> {
-  const { data, error } = await supabase
+  // Get article
+  const { data: article, error: articleError } = await supabase
     .from('articles')
     .select(`
       *,
       author:authors(id, name),
-      category:categories(id, name, slug),
-      tags:article_tags(tag:id, tag:name, tag:slug)
+      category:categories(id, name, slug)
     `)
     .eq('slug', slug)
     .single();
 
-  if (error) return null;
+  if (articleError || !article) return null;
+
+  // Get tags separately
+  const { data: articleTags, error: tagsError } = await supabase
+    .from('article_tags')
+    .select(`
+      tag:tags(id, name, slug)
+    `)
+    .eq('article_id', article.id);
+
+  const tags = articleTags?.map((at: any) => at.tag).filter(Boolean) || [];
 
   return {
-    ...data,
-    tags: data.tags?.map((t: any) => t.tag) || [],
+    ...article,
+    tags,
   };
 }
 
 // Get articles by tag
 export async function getArticlesByTag(tagSlug: string): Promise<ArticleWithRelations[]> {
-  const { data, error } = await supabase
+  // First get the tag ID
+  const { data: tagData } = await supabase
+    .from('tags')
+    .select('id')
+    .eq('slug', tagSlug)
+    .single();
+
+  if (!tagData) return [];
+
+  // Get article IDs linked to this tag
+  const { data: articleTags } = await supabase
+    .from('article_tags')
+    .select('article_id')
+    .eq('tag_id', tagData.id);
+
+  const articleIds = articleTags?.map(at => at.article_id) || [];
+  if (articleIds.length === 0) return [];
+
+  // Get articles
+  const { data: articles, error } = await supabase
     .from('articles')
     .select(`
       *,
       author:authors(id, name),
-      category:categories(id, name, slug),
-      tags:article_tags!inner(tag:id, tag:name, tag:slug)
+      category:categories(id, name, slug)
     `)
-    .eq('tags.tag.slug', tagSlug)
+    .in('id', articleIds)
     .order('published_at', { ascending: false });
 
   if (error) throw error;
+  if (!articles) return [];
 
-  return (data || []).map((article: any) => ({
+  // Get all tags for these articles
+  const { data: allArticleTags } = await supabase
+    .from('article_tags')
+    .select(`
+      article_id,
+      tag:tags(id, name, slug)
+    `)
+    .in('article_id', articleIds);
+
+  const tagsByArticle: Record<number, any[]> = {};
+  if (allArticleTags) {
+    allArticleTags.forEach((at: any) => {
+      if (!tagsByArticle[at.article_id]) {
+        tagsByArticle[at.article_id] = [];
+      }
+      if (at.tag) {
+        tagsByArticle[at.article_id].push(at.tag);
+      }
+    });
+  }
+
+  return articles.map((article: any) => ({
     ...article,
-    tags: article.tags?.map((t: any) => t.tag) || [],
+    tags: tagsByArticle[article.id] || [],
   }));
 }
 
