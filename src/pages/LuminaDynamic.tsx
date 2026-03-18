@@ -124,7 +124,7 @@ const LuminaDynamic = () => {
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                   className="group bg-white rounded-2xl border border-slate-200 overflow-hidden hover:shadow-xl transition-all duration-300"
                 >
-                  <Link to={`/article/${article.slug}`} className="block p-6">
+                  <Link to={`/article_dynamic/${article.slug}`} className="block p-6">
                     <Badge variant="secondary" className="mb-3">
                       {article.category?.name || 'LUMINA'}
                     </Badge>
