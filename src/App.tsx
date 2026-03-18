@@ -26,6 +26,7 @@ const App = () => (
           <Route path="/lumina/:slug" element={<ArticlePage />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/lumina/submit" element={<ArticleSubmission />} />
+          <Route path="/lumina_dynamic" element={<LuminaDynamic />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
