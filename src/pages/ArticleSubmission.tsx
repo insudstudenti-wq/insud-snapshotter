@@ -78,13 +78,15 @@ export default function ArticleSubmission() {
     e.preventDefault();
     setIsSubmitting(true);
 
+     const dateWithTime = formData.publishedAt + 'T00:00:00';
+
     const result = await submitArticle({
       title: formData.title,
       author: formData.author,
       content: formData.content,
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      publishedAt: formData.publishedAt,
+      publishedAt: dateWithTime,
     });
 
     if (result.success) {
