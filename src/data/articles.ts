@@ -119,7 +119,7 @@ export const articles: Article[] = [
   },
   {
     slug: "riscoperta-della-pizzica",
-    title: "La straordinaria riscoperta dellla pizzica",
+    title: "La straordinaria riscoperta dela Pizzica",
     series: "La Tradizione che si Evolve",
     date: "18 Marzo 2026",
     author: "Redazione INSUD",
