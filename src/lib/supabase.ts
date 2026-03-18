@@ -9,20 +9,23 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Types for your tables
+// Minimal types
 export type Author = {
   id: number;
   name: string;
-  email?: string;
-  bio?: string;
-  created_at: string;
 };
 
 export type Tag = {
   id: number;
   name: string;
   slug: string;
-  created_at: string;
+};
+
+export type Category = {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
 };
 
 export type Article = {
@@ -33,15 +36,11 @@ export type Article = {
   excerpt?: string;
   author_id: number;
   category_id?: number;
-  status: 'pending_review' | 'published' | 'rejected' | 'draft';
-  featured_image?: string;
   published_at?: string;
-  created_at: string;
-  updated_at: string;
-  view_count: number;
 };
 
 export type ArticleWithRelations = Article & {
   author: Author;
   tags: Tag[];
+  category?: Category;
 };
