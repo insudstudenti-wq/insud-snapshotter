@@ -117,4 +117,26 @@ export const articles: Article[] = [
       ],
     },
   },
+  {
+    slug: "riscoperta-della-pizzica",
+    title: "La straordinaria riscoperta dellla pizzica",
+    series: "La Tradizione che si Evolve",
+    date: "18 Marzo 2026",
+    author: "Redazione INSUD",
+    
+    summary: "",
+    content: [
+      "C’è chi immagina il futuro tra i grattacieli di Milano e chi lo trova battendo i piedi tra le strade del Salento. La storia della pizzica, danza popolare pugliese, è quella di un Sud che ha saputo riscrivere se stesso. Da espressione legata a cortili e feste contadine a fenomeno internazionale, la pizzica è oggi un linguaggio culturale identitario capace di unire memoria etradizione a modernità ed evoluzione.",
+      "L’origine della pizzica risiede nel tarantismo, un fenomeno tipico del Sud Italia secondo il quale si credeva che alcune persone se morse dalla “taranta”, un ragno velenoso, avrebbero avuto bisogno di una cura. In realtà, il morso rappresentava una metafora di un malessere interiore o di una sofferenza, che spesso era legata a una società patriarcale, nella quale le donne erano considerate “di proprietà” dell’uomo. La cura coincideva con la danza: la comunità si riuniva attorno alla “tarantata”, suonando tamburelli e violini affinché, attraverso il movimento e il ritmo, il corpo non espelleva simbolicamente il “veleno”. Il rito diventava così una terapia collettiva e un atto di liberazione condivisa, capace di riscattare il malessere dei più disagiati della società meridionale.",
+      "Tuttavia, nel secondo dopoguerra, con la modernizzazione del Sud e l’abbandono delle campagne, questo mondo cominciò progressivamente a dissolversi. Tra gli anni Sessanta e Ottanta, il tarantismo e la pizzica furono considerati retaggi arcaici, destinati a scomparire insieme ai riti contadini. E ciò è chiaro se si considera che le ultime “tarantate” di Galatina furono descritte dall’antropologo Ernesto De Martino nel 1961, nel saggio La terra del rimorso.",
+      "In quel periodo, venuto meno il suo palcoscenico più naturale, la pizzica rischiò di restare una tradizione del passato, schiacciata dall’omologazione culturale e destinata a perdersi nel silenzio di un Sud che sembrava non avere più voce.",
+      "Fu solo negli anni Novanta che il Salento trovò il coraggio di riscoprirla e restituirle nuova vitalità.",
+      "A cambiarne il destino fu la capacità, tipica del meridione italiano, di trasformare quella mancanza in forza creativa. E così, nel 1998, dall’idea di un gruppo di musicisti e ricercatori salentini, nacque La Notte della Taranta, un festival che si proponeva di riscoprire quella danza e riportarla tra la gente, trasformando Melpignano in un grande palcoscenico capace di unire l’intera Puglia nella rappresentazione di una “tarantata” salentina.",
+      "L’antica danza rituale divenne così un fenomeno culturale di rilievo nazionale e internazionale, per il quale hanno lavorato anche importanti artisti come Ludovico Einaudi e Dardust e artisti italiani (e non solo) di riferimento per i giovani come Marco Mengoni, Elodie, Angelina Mango, Geolier, Arisa, Mahmood, Francesca Michielin e Jovanotti. Tutti questi personaggi, hanno messo la pizzica in dialogo con la musica contemporanea, mescolando generi diversi e dimostrando che il Sud non ha bisogno di reinventarsi da zero: ha solo bisogno di riscoprire ciò che possiede e di saperlo raccontare al mondo.",
+      "Oggi La Notte della Taranta è tra i più importanti festival di musica popolare d’Europa, capace di richiamare ogni anno oltre 200.000 persone e di coinvolgere non solo salentini e pugliesi. È stata citata anche dal New York Times come esempio di rinascita identitaria del Mediterraneo e rappresenta un caso significativo di cultura popolare divenuta attrattiva globale.",
+      "Per non sottovalutare poi che la capacità dei salentini di reinventarsi genera importanti risultati economici, come dimostra il report del Centro Studi della Fondazione La Notte della Taranta, dal quale emerge un impatto superiore ai 30 milioni di euro l’anno sul territorio, generati da turismo, ospitalità e occupazione stagionale.",
+      "Ma la forza della pizzica non risiede soltanto nei numeri. È nel suo significato più profondo: ballarla significa condividere un ritmo, una storia, un senso di appartenenza. È un gesto collettivo che unisce generazioni e trasforma la nostalgia in energia. In ogni tamburello che batte si percepisce l’eco di un Sud che non chiede riscatto, ma propone un modello diverso: quello di una comunità che cresce senza rinnegare le proprie radici.",
+      "Oggi la pizzica risuona nei festival internazionali e nelle scuole di danza di tutto il mondo, celebrando la vita, il corpo, la terra e il Sud stesso. La sua storia rappresenta così la sintesi perfetta di ciò che intendiamo per tradizione che si evolve: il passato si trasforma per continuare a parlare al presente. È il segno di un Sud che non si limita a conservare, ma crea; che non teme di cambiare ritmo, restando fedele alla propria musica e alle proprie origini.",
+    ],
+  },
 ];
