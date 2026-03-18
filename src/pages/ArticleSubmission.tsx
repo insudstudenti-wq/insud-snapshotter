@@ -45,7 +45,7 @@ export default function ArticleSubmission() {
     content: '',
     category: 'Lumina',
     tags: '',
-    publishedAt: new Date().toISOString().slice(0, 16),
+    publishedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD for HTML input
   });
 
   // Manage state
