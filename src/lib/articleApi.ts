@@ -15,7 +15,7 @@ export async function submitArticle(data: {
   content: string;
   category?: string;
   tags: string[];
-  publishedAt: string; // Custom timestamp from form
+  publishedAt: string;
 }) {
   try {
     // 1. Handle author (create if new)
@@ -65,7 +65,7 @@ export async function submitArticle(data: {
         excerpt: excerpt,
         author_id: authorId,
         category_id: categoryId,
-        published_at: data.publishedAt, // Uses your manual timestamp
+        published_at: data.publishedAt,
       })
       .select('id')
       .single();
@@ -107,7 +107,7 @@ export async function submitArticle(data: {
   }
 }
 
-// Get all articles (no status filter - everything is published)
+// Get all articles (NO status filter - removed because you don't have status column)
 export async function getArticles(): Promise<ArticleWithRelations[]> {
   const { data, error } = await supabase
     .from('articles')
@@ -119,7 +119,10 @@ export async function getArticles(): Promise<ArticleWithRelations[]> {
     `)
     .order('published_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('getArticles error:', error);
+    throw error;
+  }
 
   return (data || []).map((article: any) => ({
     ...article,
@@ -169,40 +172,7 @@ export async function getArticlesByTag(tagSlug: string): Promise<ArticleWithRela
   }));
 }
 
-// Delete article
-export async function deleteArticle(articleId: number) {
-  const { error } = await supabase
-    .from('articles')
-    .delete()
-    .eq('id', articleId);
-
-  if (error) throw error;
-  return { success: true };
-}
-
-// Get all tags
-export async function getAllTags() {
-  const { data, error } = await supabase
-    .from('tags')
-    .select('*, article_count:article_tags(count)')
-    .order('name');
-
-  if (error) throw error;
-  return data || [];
-}
-
-// Get all authors
-export async function getAllAuthors() {
-  const { data, error } = await supabase
-    .from('authors')
-    .select('id, name, article_count:articles(count)')
-    .order('name');
-
-  if (error) throw error;
-  return data || [];
-}
-
-// Update article (full update)
+// Update article
 export async function updateArticle(
   articleId: number,
   data: {
@@ -218,7 +188,6 @@ export async function updateArticle(
     
     if (data.title) {
       updates.title = data.title;
-      // Regenerate slug if title changes
       updates.slug = `${generateSlug(data.title)}-${Date.now()}`;
     }
     if (data.content) {
@@ -228,7 +197,6 @@ export async function updateArticle(
     if (data.excerpt) updates.excerpt = data.excerpt;
     if (data.published_at) updates.published_at = data.published_at;
     
-    // Handle author change
     if (data.author) {
       let authorId: number;
       const { data: existingAuthor } = await supabase
@@ -269,13 +237,11 @@ export async function updateArticle(
 // Update article tags
 export async function updateArticleTags(articleId: number, tags: string[]) {
   try {
-    // Remove existing tags
     await supabase
       .from('article_tags')
       .delete()
       .eq('article_id', articleId);
 
-    // Add new tags
     if (tags.length > 0) {
       for (const tagName of tags) {
         const tagSlug = generateSlug(tagName);
@@ -300,4 +266,37 @@ export async function updateArticleTags(articleId: number, tags: string[]) {
     console.error('Error updating tags:', error);
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
+}
+
+// Delete article
+export async function deleteArticle(articleId: number) {
+  const { error } = await supabase
+    .from('articles')
+    .delete()
+    .eq('id', articleId);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+// Get all tags
+export async function getAllTags() {
+  const { data, error } = await supabase
+    .from('tags')
+    .select('*, article_count:article_tags(count)')
+    .order('name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+// Get all authors
+export async function getAllAuthors() {
+  const { data, error } = await supabase
+    .from('authors')
+    .select('id, name, article_count:articles(count)')
+    .order('name');
+
+  if (error) throw error;
+  return data || [];
 }
