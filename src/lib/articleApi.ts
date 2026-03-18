@@ -1,7 +1,6 @@
 import { supabase } from './supabase';
-import type { Article, Author, Tag, ArticleWithRelations } from './supabase';
+import type { ArticleWithRelations } from './supabase';
 
-// Helper to generate slug
 const generateSlug = (title: string): string => {
   return title
     .toLowerCase()
@@ -9,7 +8,7 @@ const generateSlug = (title: string): string => {
     .replace(/(^-|-$)/g, '');
 };
 
-// Submit new article
+// Submit article (immediately published)
 export async function submitArticle(data: {
   title: string;
   author: string;
@@ -18,7 +17,7 @@ export async function submitArticle(data: {
   tags: string[];
 }) {
   try {
-    // 1. Check if author exists, create if not
+    // 1. Handle author (create if new)
     let authorId: number;
     
     const { data: existingAuthor } = await supabase
@@ -40,7 +39,7 @@ export async function submitArticle(data: {
       authorId = newAuthor!.id;
     }
 
-    // 2. Get category ID (default to 'Lumina')
+    // 2. Get category ID
     let categoryId = null;
     if (data.category) {
       const { data: category } = await supabase
@@ -52,7 +51,7 @@ export async function submitArticle(data: {
       if (category) categoryId = category.id;
     }
 
-    // 3. Create article
+    // 3. Create article (published immediately)
     const slug = `${generateSlug(data.title)}-${Date.now()}`;
     const excerpt = data.content.substring(0, 200) + '...';
     
@@ -65,19 +64,18 @@ export async function submitArticle(data: {
         excerpt: excerpt,
         author_id: authorId,
         category_id: categoryId,
-        status: 'pending_review',
+        published_at: new Date().toISOString(),
       })
       .select('id')
       .single();
 
     if (articleError) throw articleError;
 
-    // 4. Process tags
+    // 4. Handle tags
     if (data.tags.length > 0) {
       for (const tagName of data.tags) {
         const tagSlug = generateSlug(tagName);
         
-        // Insert tag if not exists
         const { data: tagData } = await supabase
           .from('tags')
           .upsert(
@@ -88,7 +86,6 @@ export async function submitArticle(data: {
           .single();
 
         if (tagData) {
-          // Link tag to article
           await supabase
             .from('article_tags')
             .insert({
@@ -109,22 +106,20 @@ export async function submitArticle(data: {
   }
 }
 
-// Get all published articles with relations
-export async function getPublishedArticles(): Promise<ArticleWithRelations[]> {
+// Get all articles (no status filter - everything is published)
+export async function getArticles(): Promise<ArticleWithRelations[]> {
   const { data, error } = await supabase
     .from('articles')
     .select(`
       *,
-      author:authors(*),
-      category:categories(*),
-      tags:article_tags(tag:tags(*))
+      author:authors(id, name),
+      category:categories(id, name, slug),
+      tags:article_tags(tag:id, tag:name, tag:slug)
     `)
-    .eq('status', 'published')
     .order('published_at', { ascending: false });
 
   if (error) throw error;
 
-  // Transform the nested data
   return (data || []).map((article: any) => ({
     ...article,
     tags: article.tags?.map((t: any) => t.tag) || [],
@@ -137,12 +132,11 @@ export async function getArticleBySlug(slug: string): Promise<ArticleWithRelatio
     .from('articles')
     .select(`
       *,
-      author:authors(*),
-      category:categories(*),
-      tags:article_tags(tag:tags(*))
+      author:authors(id, name),
+      category:categories(id, name, slug),
+      tags:article_tags(tag:id, tag:name, tag:slug)
     `)
     .eq('slug', slug)
-    .eq('status', 'published')
     .single();
 
   if (error) return null;
@@ -159,12 +153,11 @@ export async function getArticlesByTag(tagSlug: string): Promise<ArticleWithRela
     .from('articles')
     .select(`
       *,
-      author:authors(*),
-      category:categories(*),
-      tags:article_tags!inner(tag:tags!inner(*))
+      author:authors(id, name),
+      category:categories(id, name, slug),
+      tags:article_tags!inner(tag:id, tag:name, tag:slug)
     `)
     .eq('tags.tag.slug', tagSlug)
-    .eq('status', 'published')
     .order('published_at', { ascending: false });
 
   if (error) throw error;
@@ -175,49 +168,7 @@ export async function getArticlesByTag(tagSlug: string): Promise<ArticleWithRela
   }));
 }
 
-// Admin: Get pending articles
-export async function getPendingArticles(): Promise<ArticleWithRelations[]> {
-  const { data, error } = await supabase
-    .from('articles')
-    .select(`
-      *,
-      author:authors(*),
-      category:categories(*),
-      tags:article_tags(tag:tags(*))
-    `)
-    .eq('status', 'pending_review')
-    .order('created_at', { ascending: false });
-
-  if (error) throw error;
-
-  return (data || []).map((article: any) => ({
-    ...article,
-    tags: article.tags?.map((t: any) => t.tag) || [],
-  }));
-}
-
-// Admin: Update article status
-export async function updateArticleStatus(
-  articleId: number, 
-  status: 'published' | 'rejected' | 'draft',
-  publishedAt?: string
-) {
-  const updates: any = { status };
-  
-  if (status === 'published') {
-    updates.published_at = publishedAt || new Date().toISOString();
-  }
-
-  const { error } = await supabase
-    .from('articles')
-    .update(updates)
-    .eq('id', articleId);
-
-  if (error) throw error;
-  return { success: true };
-}
-
-// Admin: Delete article
+// Delete article
 export async function deleteArticle(articleId: number) {
   const { error } = await supabase
     .from('articles')
@@ -226,4 +177,26 @@ export async function deleteArticle(articleId: number) {
 
   if (error) throw error;
   return { success: true };
+}
+
+// Get all tags
+export async function getAllTags() {
+  const { data, error } = await supabase
+    .from('tags')
+    .select('*, article_count:article_tags(count)')
+    .order('name');
+
+  if (error) throw error;
+  return data || [];
+}
+
+// Get all authors
+export async function getAllAuthors() {
+  const { data, error } = await supabase
+    .from('authors')
+    .select('id, name, article_count:articles(count)')
+    .order('name');
+
+  if (error) throw error;
+  return data || [];
 }
