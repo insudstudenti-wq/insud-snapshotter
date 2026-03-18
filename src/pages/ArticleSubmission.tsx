@@ -14,6 +14,7 @@ interface ArticleFormData {
   content: string;
   category: string;
   tags: string;
+  publishedAt: string; // NEW: manual timestamp
 }
 
 export default function ArticleSubmission() {
@@ -26,11 +27,12 @@ export default function ArticleSubmission() {
     content: '',
     category: 'Lumina',
     tags: '',
+    publishedAt: new Date().toISOString().slice(0, 16), // NEW: default to now (format: YYYY-MM-DDTHH:MM)
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // ← MISSING: Prevents page reload
-    setIsSubmitting(true); // ← MISSING: Shows loading state
+    e.preventDefault();
+    setIsSubmitting(true);
 
     const result = await submitArticle({
       title: formData.title,
@@ -38,22 +40,24 @@ export default function ArticleSubmission() {
       content: formData.content,
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      publishedAt: formData.publishedAt, // NEW: pass the manual timestamp
     });
 
     if (result.success) {
       toast({
-    title: "Article Published",
-    description: `Your article has been published successfully (ID: ${result.id})`,
-  });
-  
-  // Reset form
-  setFormData({
-    title: '',
-    author: '',
-    content: '',
-    category: 'Lumina',
-    tags: '',
-  });
+        title: "Article Published",
+        description: `Your article has been published successfully (ID: ${result.id})`,
+      });
+      
+      // Reset form
+      setFormData({
+        title: '',
+        author: '',
+        content: '',
+        category: 'Lumina',
+        tags: '',
+        publishedAt: new Date().toISOString().slice(0, 16),
+      });
     } else {
       toast({
         title: "Submission Failed",
@@ -62,7 +66,7 @@ export default function ArticleSubmission() {
       });
     }
 
-    setIsSubmitting(false); // ← MISSING: Hides loading state
+    setIsSubmitting(false);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -117,6 +121,25 @@ export default function ArticleSubmission() {
                 />
               </div>
 
+              {/* NEW: Publication Date/Time Field */}
+              <div className="space-y-2">
+                <Label htmlFor="publishedAt" className="text-sm font-semibold text-slate-700">
+                  Publication Date & Time *
+                </Label>
+                <Input
+                  id="publishedAt"
+                  name="publishedAt"
+                  type="datetime-local"
+                  required
+                  value={formData.publishedAt}
+                  onChange={handleChange}
+                  className="h-12 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                />
+                <p className="text-xs text-slate-500">
+                  Set when this article should appear as published. Defaults to now.
+                </p>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="content" className="text-sm font-semibold text-slate-700">
                   Article Content *
@@ -157,7 +180,7 @@ export default function ArticleSubmission() {
                   disabled={isSubmitting}
                   className="flex-1 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Article'}
+                  {isSubmitting ? 'Publishing...' : 'Publish Article'}
                 </Button>
                 
                 <Button
