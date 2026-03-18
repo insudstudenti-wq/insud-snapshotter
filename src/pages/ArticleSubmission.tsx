@@ -313,7 +313,7 @@ export default function ArticleSubmission() {
                     <Input
                       id="publishedAt"
                       name="publishedAt"
-                      type="datetime-local"
+                      type="date"
                       required
                       value={formData.publishedAt}
                       onChange={handleChange}
