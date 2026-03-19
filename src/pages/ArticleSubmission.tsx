@@ -119,7 +119,7 @@ export default function ArticleSubmission() {
       author: article.author.name,
       content: article.content,
       excerpt: article.excerpt || '',
-      published_at: article.published_at ? new Date(article.published_at).toISOString().slice(0, 16) : '',
+      published_at: article.published_at ? article.published_at.slice(0, 10) : '',
       tags: article.tags.map(t => t.name).join(', '),
     });
   };
@@ -130,13 +130,17 @@ export default function ArticleSubmission() {
   };
 
   const saveEdit = async () => {
-    if (!editForm) return;
+    if (!editForm || !editingId) return;
+
+      const publishedAt = editForm.published_at.includes('T') 
+        ? editForm.published_at 
+        : editForm.published_at + 'T00:00:00';
     
     const result = await updateArticle(editForm.id, {
       title: editForm.title,
       content: editForm.content,
       excerpt: editForm.excerpt,
-      published_at: editForm.published_at,
+      published_at: publishedAt,
       author: editForm.author,
     });
 
@@ -167,7 +171,7 @@ export default function ArticleSubmission() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* SIDEBAR - Fixed width, explicit styles */}
+      {/* SIDEBAR*/}
       <aside style={{ 
         width: '280px', 
         minWidth: '280px',
@@ -429,10 +433,10 @@ export default function ArticleSubmission() {
                             <Calendar className="w-3 h-3" /> Data Pubblicazione
                           </Label>
                           <Input
-                            type="datetime-local"
-                            value={editForm.published_at}
-                            onChange={(e) => setEditForm({...editForm, published_at: e.target.value})}
-                            className="h-9 w-64"
+                            type="date"
+                            value={editForm.published_at ? editForm.published_at.slice(0, 10) : ''}
+                            onChange={(e) => setEditForm({...editForm, published_at: e.target.value + 'T00:00:00'})}
+                            className="h-9 w-48"
                           />
                         </div>
 
@@ -478,7 +482,7 @@ export default function ArticleSubmission() {
                             </div>
                             <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-3">
                               <span>Autore: {article.author.name}</span>
-                              <span>Data: {new Date(article.published_at).toLocaleString('it-IT')}</span>
+                              <span>Data: {new Date(article.published_at).toLocaleDateString('it-IT')}</span>
                               <span>Slug: {article.slug}</span>
                             </div>
                             <p className="text-sm text-slate-600 line-clamp-2">
