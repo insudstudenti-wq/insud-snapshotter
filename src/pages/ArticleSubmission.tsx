@@ -15,6 +15,7 @@ import 'react-datepicker/dist/react-datepicker.css';
 
 type Tool = 'publish' | 'manage';
 
+// Complete interface with all fields
 interface ArticleFormData {
   title: string;
   author: string;
@@ -22,6 +23,7 @@ interface ArticleFormData {
   category: string;
   tags: string;
   publishedAt: string; // ISO format YYYY-MM-DD
+  excerpt: string; // Article summary/description
 }
 
 interface EditingArticle {
@@ -30,7 +32,7 @@ interface EditingArticle {
   author: string;
   content: string;
   excerpt: string;
-  published_at: string; // ISO format
+  published_at: string;
   tags: string;
 }
 
@@ -56,7 +58,7 @@ export default function ArticleSubmission() {
   const { toast } = useToast();
   const [activeTool, setActiveTool] = useState<Tool>('publish');
   
-  // Publish form state
+  // Publish form state - includes excerpt from the start
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
@@ -64,7 +66,8 @@ export default function ArticleSubmission() {
     content: '',
     category: 'Lumina',
     tags: '',
-    publishedAt: new Date().toISOString().slice(0, 10), // Today as ISO
+    publishedAt: new Date().toISOString().slice(0, 10),
+    excerpt: '', // Initialized empty
   });
 
   // Manage state
@@ -99,6 +102,7 @@ export default function ArticleSubmission() {
     // Convert ISO date + midnight time for database
     const fullTimestamp = formData.publishedAt + 'T00:00:00';
 
+    // Include excerpt in submission
     const result = await submitArticle({
       title: formData.title,
       author: formData.author,
@@ -106,10 +110,12 @@ export default function ArticleSubmission() {
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       publishedAt: fullTimestamp,
+      excerpt: formData.excerpt, // Included in API call
     });
 
     if (result.success) {
       toast({ title: "Articolo Pubblicato", description: `ID: ${result.id}` });
+      // Reset including excerpt
       setFormData({
         title: '',
         author: '',
@@ -117,6 +123,7 @@ export default function ArticleSubmission() {
         category: 'Lumina',
         tags: '',
         publishedAt: new Date().toISOString().slice(0, 10),
+        excerpt: '', // Reset to empty
       });
     } else {
       toast({ title: "Errore", description: result.error, variant: "destructive" });
@@ -139,7 +146,7 @@ export default function ArticleSubmission() {
       title: article.title,
       author: article.author.name,
       content: article.content,
-      excerpt: article.excerpt || '',
+      excerpt: article.excerpt || '', // Include excerpt
       published_at: dateOnly,
       tags: article.tags.map(t => t.name).join(', '),
     });
@@ -158,7 +165,7 @@ export default function ArticleSubmission() {
     const result = await updateArticle(editForm.id, {
       title: editForm.title,
       content: editForm.content,
-      excerpt: editForm.excerpt,
+      excerpt: editForm.excerpt, // Include in update
       published_at: fullTimestamp,
       author: editForm.author,
     });
@@ -299,6 +306,7 @@ export default function ArticleSubmission() {
               
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Title */}
                   <div className="space-y-2">
                     <Label htmlFor="title" className="text-sm font-semibold text-slate-700">
                       Titolo *
@@ -315,6 +323,7 @@ export default function ArticleSubmission() {
                     />
                   </div>
 
+                  {/* Author */}
                   <div className="space-y-2">
                     <Label htmlFor="author" className="text-sm font-semibold text-slate-700">
                       Autore *
@@ -331,7 +340,7 @@ export default function ArticleSubmission() {
                     />
                   </div>
 
-                  {/* REACT-DATEPICKER - EUROPEAN FORMAT */}
+                  {/* Date with react-datepicker */}
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-slate-700">
                       Data Pubblicazione *
@@ -359,6 +368,27 @@ export default function ArticleSubmission() {
                     </div>
                   </div>
 
+                  {/* EXCERPT/SUMMARY FIELD - ADDED HERE */}
+                  <div className="space-y-2">
+                    <Label htmlFor="excerpt" className="text-sm font-semibold text-slate-700">
+                      Sommario/Descrizione
+                    </Label>
+                    <Textarea
+                      id="excerpt"
+                      name="excerpt"
+                      rows={3}
+                      placeholder="Breve descrizione dell'articolo (opzionale)..."
+                      value={formData.excerpt}
+                      onChange={handleChange}
+                      className="border-slate-200 focus:border-indigo-500 resize-none text-sm"
+                      maxLength={200}
+                    />
+                    <p className="text-xs text-slate-500">
+                      {formData.excerpt?.length || 0}/200 caratteri. Vuoto = auto-generato dai primi 200 caratteri.
+                    </p>
+                  </div>
+
+                  {/* Content */}
                   <div className="space-y-2">
                     <Label htmlFor="content" className="text-sm font-semibold text-slate-700">
                       Contenuto *
@@ -375,6 +405,7 @@ export default function ArticleSubmission() {
                     />
                   </div>
 
+                  {/* Tags */}
                   <div className="space-y-2">
                     <Label htmlFor="tags" className="text-sm font-semibold text-slate-700">
                       Tag (separati da virgola)
@@ -460,7 +491,7 @@ export default function ArticleSubmission() {
                           </div>
                         </div>
 
-                        {/* EDIT DATE WITH REACT-DATEPICKER */}
+                        {/* Edit date */}
                         <div>
                           <Label className="text-xs font-semibold flex items-center gap-1 mb-1">
                             <Calendar className="w-3 h-3" /> Data
@@ -484,16 +515,22 @@ export default function ArticleSubmission() {
                           />
                         </div>
 
+                        {/* Edit excerpt */}
                         <div>
-                          <Label className="text-xs font-semibold mb-1">Descrizione/Excerpt</Label>
+                          <Label className="text-xs font-semibold mb-1">Sommario/Descrizione</Label>
                           <Textarea
                             value={editForm.excerpt}
                             onChange={(e) => setEditForm({...editForm, excerpt: e.target.value})}
                             rows={2}
                             className="text-sm"
+                            maxLength={200}
                           />
+                          <p className="text-xs text-slate-500 mt-1">
+                            {editForm.excerpt?.length || 0}/200 caratteri
+                          </p>
                         </div>
 
+                        {/* Edit content */}
                         <div>
                           <Label className="text-xs font-semibold mb-1">Contenuto</Label>
                           <Textarea
@@ -504,6 +541,7 @@ export default function ArticleSubmission() {
                           />
                         </div>
 
+                        {/* Edit tags */}
                         <div>
                           <Label className="text-xs font-semibold flex items-center gap-1 mb-1">
                             <Tag className="w-3 h-3" /> Tag (separati da virgola)
@@ -529,8 +567,14 @@ export default function ArticleSubmission() {
                               <span>Data: {formatDateDisplay(article.published_at)}</span>
                               <span>Slug: {article.slug}</span>
                             </div>
+                            {/* Show excerpt if exists */}
+                            {article.excerpt && (
+                              <p className="text-sm text-slate-600 italic mb-2">
+                                {article.excerpt}
+                              </p>
+                            )}
                             <p className="text-sm text-slate-600 line-clamp-2">
-                              {article.excerpt || article.content.substring(0, 150)}...
+                              {article.content.substring(0, 150)}...
                             </p>
                             {article.tags.length > 0 && (
                               <div className="flex gap-1 mt-3">
