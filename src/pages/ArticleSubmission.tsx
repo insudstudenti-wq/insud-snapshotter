@@ -19,7 +19,7 @@ interface ArticleFormData {
   content: string;
   category: string;
   tags: string;
-  publishedAt: string;
+  publishedAt: string; // Stored as ISO: YYYY-MM-DD
 }
 
 interface EditingArticle {
@@ -28,16 +28,39 @@ interface EditingArticle {
   author: string;
   content: string;
   excerpt: string;
-  published_at: string;
+  published_at: string; // Stored as ISO
   tags: string;
 }
+
+// Helper: Convert ISO (YYYY-MM-DD) to European display (DD/MM/YYYY)
+const toEuropeanDate = (isoDate: string): string => {
+  if (!isoDate) return '';
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+};
+
+// Helper: Convert European input (DD/MM/YYYY) to ISO (YYYY-MM-DD)
+const fromEuropeanDate = (euroDate: string): string => {
+  const [day, month, year] = euroDate.split('/');
+  if (!day || !month || !year) return '';
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+// Helper: Format ISO to European for display in article list
+const formatDateDisplay = (isoTimestamp: string): string => {
+  return new Date(isoTimestamp).toLocaleDateString('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 
 export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTool, setActiveTool] = useState<Tool>('publish');
   
-  // Publish form state
+  // Publish form state - stores ISO internally
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
@@ -45,7 +68,7 @@ export default function ArticleSubmission() {
     content: '',
     category: 'Lumina',
     tags: '',
-    publishedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD for HTML input
+    publishedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
   });
 
   // Manage state
@@ -54,7 +77,6 @@ export default function ArticleSubmission() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EditingArticle | null>(null);
 
-  // Load articles for management
   useEffect(() => {
     if (activeTool === 'manage') {
       loadArticles();
@@ -78,7 +100,8 @@ export default function ArticleSubmission() {
     e.preventDefault();
     setIsSubmitting(true);
 
-     const dateWithTime = formData.publishedAt + 'T00:00:00';
+    // Convert ISO date + midnight time for database
+    const fullTimestamp = formData.publishedAt + 'T00:00:00';
 
     const result = await submitArticle({
       title: formData.title,
@@ -86,7 +109,7 @@ export default function ArticleSubmission() {
       content: formData.content,
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      publishedAt: dateWithTime,
+      publishedAt: fullTimestamp,
     });
 
     if (result.success) {
@@ -97,7 +120,7 @@ export default function ArticleSubmission() {
         content: '',
         category: 'Lumina',
         tags: '',
-        publishedAt: new Date().toISOString().slice(0, 10),
+        publishedAt: new Date().toISOString().slice(0, 10), // Reset to today (ISO)
       });
     } else {
       toast({ title: "Errore", description: result.error, variant: "destructive" });
@@ -110,16 +133,26 @@ export default function ArticleSubmission() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Special handler for European date input
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const euroDate = e.target.value;
+    const isoDate = fromEuropeanDate(euroDate);
+    setFormData(prev => ({ ...prev, publishedAt: isoDate }));
+  };
+
   // Manage handlers
   const startEditing = (article: ArticleWithRelations) => {
     setEditingId(article.id);
+    // Extract YYYY-MM-DD from full timestamp
+    const dateOnly = article.published_at ? article.published_at.slice(0, 10) : '';
+    
     setEditForm({
       id: article.id,
       title: article.title,
       author: article.author.name,
       content: article.content,
       excerpt: article.excerpt || '',
-      published_at: article.published_at ? article.published_at.slice(0, 10) : '',
+      published_at: dateOnly, // Store as YYYY-MM-DD
       tags: article.tags.map(t => t.name).join(', '),
     });
   };
@@ -130,17 +163,16 @@ export default function ArticleSubmission() {
   };
 
   const saveEdit = async () => {
-    if (!editForm || !editingId) return;
-
-      const publishedAt = editForm.published_at.includes('T') 
-        ? editForm.published_at 
-        : editForm.published_at + 'T00:00:00';
+    if (!editForm) return;
+    
+    // Convert date to full timestamp
+    const fullTimestamp = editForm.published_at + 'T00:00:00';
     
     const result = await updateArticle(editForm.id, {
       title: editForm.title,
       content: editForm.content,
       excerpt: editForm.excerpt,
-      published_at: publishedAt,
+      published_at: fullTimestamp,
       author: editForm.author,
     });
 
@@ -171,7 +203,7 @@ export default function ArticleSubmission() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
-      {/* SIDEBAR*/}
+      {/* SIDEBAR */}
       <aside style={{ 
         width: '280px', 
         minWidth: '280px',
@@ -292,7 +324,7 @@ export default function ArticleSubmission() {
                       placeholder="Titolo dell'articolo..."
                       value={formData.title}
                       onChange={handleChange}
-                      className="h-12 text-lg border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      className="h-12 text-lg border-slate-200 focus:border-indigo-500"
                     />
                   </div>
 
@@ -308,23 +340,29 @@ export default function ArticleSubmission() {
                       placeholder="Nome autore"
                       value={formData.author}
                       onChange={handleChange}
-                      className="h-12 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      className="h-12 border-slate-200 focus:border-indigo-500"
                     />
                   </div>
 
+                  {/* EUROPEAN DATE INPUT */}
                   <div className="space-y-2">
                     <Label htmlFor="publishedAt" className="text-sm font-semibold text-slate-700">
-                      Data Pubblicazione *
+                      Data Pubblicazione (gg/mm/aaaa) *
                     </Label>
                     <Input
                       id="publishedAt"
                       name="publishedAt"
-                      type="date"
+                      type="text"
+                      placeholder="19/03/2026"
+                      pattern="\d{2}/\d{2}/\d{4}"
                       required
-                      value={formData.publishedAt}
-                      onChange={handleChange}
-                      className="h-12 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      value={toEuropeanDate(formData.publishedAt)} // Display as DD/MM/YYYY
+                      onChange={handleDateChange} // Convert back to ISO
+                      className="h-12 border-slate-200 focus:border-indigo-500 w-48"
                     />
+                    <p className="text-xs text-slate-500">
+                      Formato: giorno/mese/anno (es. 19/03/2026)
+                    </p>
                   </div>
 
                   <div className="space-y-2">
@@ -339,7 +377,7 @@ export default function ArticleSubmission() {
                       placeholder="Scrivi il contenuto..."
                       value={formData.content}
                       onChange={handleChange}
-                      className="min-h-[300px] border-slate-200 focus:border-indigo-500 focus:ring-indigo-500 resize-y font-mono text-sm leading-relaxed"
+                      className="min-h-[300px] border-slate-200 focus:border-indigo-500 resize-y font-mono text-sm leading-relaxed"
                     />
                   </div>
 
@@ -354,14 +392,14 @@ export default function ArticleSubmission() {
                       placeholder="ricerca, studenti, opinione..."
                       value={formData.tags}
                       onChange={handleChange}
-                      className="h-12 border-slate-200 focus:border-indigo-500 focus:ring-indigo-500"
+                      className="h-12 border-slate-200 focus:border-indigo-500"
                     />
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full h-12 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold text-lg"
                   >
                     {isSubmitting ? 'Pubblicazione...' : 'Pubblica Articolo'}
                   </Button>
@@ -428,15 +466,21 @@ export default function ArticleSubmission() {
                           </div>
                         </div>
 
+                        {/* EDIT DATE - EUROPEAN FORMAT */}
                         <div>
                           <Label className="text-xs font-semibold flex items-center gap-1 mb-1">
-                            <Calendar className="w-3 h-3" /> Data Pubblicazione
+                            <Calendar className="w-3 h-3" /> Data (gg/mm/aaaa)
                           </Label>
                           <Input
-                            type="date"
-                            value={editForm.published_at ? editForm.published_at.slice(0, 10) : ''}
-                            onChange={(e) => setEditForm({...editForm, published_at: e.target.value + 'T00:00:00'})}
-                            className="h-9 w-48"
+                            type="text"
+                            placeholder="19/03/2026"
+                            pattern="\d{2}/\d{2}/\d{4}"
+                            value={toEuropeanDate(editForm.published_at)} // Display DD/MM/YYYY
+                            onChange={(e) => {
+                              const isoDate = fromEuropeanDate(e.target.value);
+                              setEditForm({...editForm, published_at: isoDate});
+                            }}
+                            className="h-9 w-40"
                           />
                         </div>
 
@@ -482,7 +526,8 @@ export default function ArticleSubmission() {
                             </div>
                             <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-3">
                               <span>Autore: {article.author.name}</span>
-                              <span>Data: {new Date(article.published_at).toLocaleDateString('it-IT')}</span>
+                              {/* EUROPEAN DATE DISPLAY */}
+                              <span>Data: {formatDateDisplay(article.published_at)}</span>
                               <span>Slug: {article.slug}</span>
                             </div>
                             <p className="text-sm text-slate-600 line-clamp-2">
