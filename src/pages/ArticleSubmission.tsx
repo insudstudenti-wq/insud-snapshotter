@@ -56,7 +56,17 @@ const formatDateDisplay = (isoTimestamp: string): string => {
 export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [activeTool, setActiveTool] = useState<Tool>('publish');
+  const [activeTool, setActiveTool] = useState<Tool>(() => {
+  // Load from localStorage on initial render
+    const saved = localStorage.getItem('lumina_editor_tool');
+    return (saved as Tool) || 'publish';
+  });
+
+// Update the tool switcher to save to localStorage:
+const handleToolChange = (tool: Tool) => {
+  setActiveTool(tool);
+  localStorage.setItem('lumina_editor_tool', tool);
+};
   
   // Publish form state - includes excerpt from the start
   const [isSubmitting, setIsSubmitting] = useState(false);
