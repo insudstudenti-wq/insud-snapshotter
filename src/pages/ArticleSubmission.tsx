@@ -10,6 +10,8 @@ import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
 import type { ArticleWithRelations } from '@/lib/supabase';
 import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag } from 'lucide-react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 type Tool = 'publish' | 'manage';
 
@@ -19,7 +21,7 @@ interface ArticleFormData {
   content: string;
   category: string;
   tags: string;
-  publishedAt: string; // Stored as ISO: YYYY-MM-DD
+  publishedAt: string; // ISO format YYYY-MM-DD
 }
 
 interface EditingArticle {
@@ -28,26 +30,20 @@ interface EditingArticle {
   author: string;
   content: string;
   excerpt: string;
-  published_at: string; // Stored as ISO
+  published_at: string; // ISO format
   tags: string;
 }
 
-// Helper: Convert ISO (YYYY-MM-DD) to European display (DD/MM/YYYY)
+// Helper: Format ISO to European DD/MM/YYYY for display
 const toEuropeanDate = (isoDate: string): string => {
   if (!isoDate) return '';
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
 };
 
-// Helper: Convert European input (DD/MM/YYYY) to ISO (YYYY-MM-DD)
-const fromEuropeanDate = (euroDate: string): string => {
-  const [day, month, year] = euroDate.split('/');
-  if (!day || !month || !year) return '';
-  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-};
-
-// Helper: Format ISO to European for display in article list
+// Helper: Format timestamp to European for article list
 const formatDateDisplay = (isoTimestamp: string): string => {
+  if (!isoTimestamp) return '';
   return new Date(isoTimestamp).toLocaleDateString('it-IT', {
     day: '2-digit',
     month: '2-digit',
@@ -60,7 +56,7 @@ export default function ArticleSubmission() {
   const { toast } = useToast();
   const [activeTool, setActiveTool] = useState<Tool>('publish');
   
-  // Publish form state - stores ISO internally
+  // Publish form state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
@@ -68,7 +64,7 @@ export default function ArticleSubmission() {
     content: '',
     category: 'Lumina',
     tags: '',
-    publishedAt: new Date().toISOString().slice(0, 10), // YYYY-MM-DD
+    publishedAt: new Date().toISOString().slice(0, 10), // Today as ISO
   });
 
   // Manage state
@@ -120,7 +116,7 @@ export default function ArticleSubmission() {
         content: '',
         category: 'Lumina',
         tags: '',
-        publishedAt: new Date().toISOString().slice(0, 10), // Reset to today (ISO)
+        publishedAt: new Date().toISOString().slice(0, 10),
       });
     } else {
       toast({ title: "Errore", description: result.error, variant: "destructive" });
@@ -133,17 +129,9 @@ export default function ArticleSubmission() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Special handler for European date input
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const euroDate = e.target.value;
-    const isoDate = fromEuropeanDate(euroDate);
-    setFormData(prev => ({ ...prev, publishedAt: isoDate }));
-  };
-
   // Manage handlers
   const startEditing = (article: ArticleWithRelations) => {
     setEditingId(article.id);
-    // Extract YYYY-MM-DD from full timestamp
     const dateOnly = article.published_at ? article.published_at.slice(0, 10) : '';
     
     setEditForm({
@@ -152,7 +140,7 @@ export default function ArticleSubmission() {
       author: article.author.name,
       content: article.content,
       excerpt: article.excerpt || '',
-      published_at: dateOnly, // Store as YYYY-MM-DD
+      published_at: dateOnly,
       tags: article.tags.map(t => t.name).join(', '),
     });
   };
@@ -165,7 +153,6 @@ export default function ArticleSubmission() {
   const saveEdit = async () => {
     if (!editForm) return;
     
-    // Convert date to full timestamp
     const fullTimestamp = editForm.published_at + 'T00:00:00';
     
     const result = await updateArticle(editForm.id, {
@@ -344,25 +331,32 @@ export default function ArticleSubmission() {
                     />
                   </div>
 
-                  {/* EUROPEAN DATE INPUT */}
+                  {/* REACT-DATEPICKER - EUROPEAN FORMAT */}
                   <div className="space-y-2">
-                    <Label htmlFor="publishedAt" className="text-sm font-semibold text-slate-700">
-                      Data Pubblicazione (gg/mm/aaaa) *
+                    <Label className="text-sm font-semibold text-slate-700">
+                      Data Pubblicazione *
                     </Label>
-                    <Input
-                      id="publishedAt"
-                      name="publishedAt"
-                      type="text"
-                      placeholder="19/03/2026"
-                      pattern="\d{2}/\d{2}/\d{4}"
-                      required
-                      value={toEuropeanDate(formData.publishedAt)} // Display as DD/MM/YYYY
-                      onChange={handleDateChange} // Convert back to ISO
-                      className="h-12 border-slate-200 focus:border-indigo-500 w-48"
-                    />
-                    <p className="text-xs text-slate-500">
-                      Formato: giorno/mese/anno (es. 19/03/2026)
-                    </p>
+                    <div className="flex items-center gap-3">
+                      <DatePicker
+                        selected={formData.publishedAt ? new Date(formData.publishedAt) : new Date()}
+                        onChange={(date: Date | null) => {
+                          if (date) {
+                            const isoDate = date.toISOString().slice(0, 10);
+                            setFormData(prev => ({ ...prev, publishedAt: isoDate }));
+                          }
+                        }}
+                        dateFormat="dd/MM/yyyy"
+                        locale="it"
+                        minDate={new Date('2000-01-01')}
+                        maxDate={new Date('2050-12-31')}
+                        className="h-12 px-4 border border-slate-200 rounded-md focus:border-indigo-500 focus:ring-indigo-500 w-48"
+                        showMonthDropdown
+                        showYearDropdown
+                        dropdownMode="select"
+                        required
+                      />
+                      <span className="text-sm text-slate-500">Formato: gg/mm/aaaa</span>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
@@ -466,21 +460,27 @@ export default function ArticleSubmission() {
                           </div>
                         </div>
 
-                        {/* EDIT DATE - EUROPEAN FORMAT */}
+                        {/* EDIT DATE WITH REACT-DATEPICKER */}
                         <div>
                           <Label className="text-xs font-semibold flex items-center gap-1 mb-1">
-                            <Calendar className="w-3 h-3" /> Data (gg/mm/aaaa)
+                            <Calendar className="w-3 h-3" /> Data
                           </Label>
-                          <Input
-                            type="text"
-                            placeholder="19/03/2026"
-                            pattern="\d{2}/\d{2}/\d{4}"
-                            value={toEuropeanDate(editForm.published_at)} // Display DD/MM/YYYY
-                            onChange={(e) => {
-                              const isoDate = fromEuropeanDate(e.target.value);
-                              setEditForm({...editForm, published_at: isoDate});
+                          <DatePicker
+                            selected={editForm.published_at ? new Date(editForm.published_at) : new Date()}
+                            onChange={(date: Date | null) => {
+                              if (date) {
+                                const isoDate = date.toISOString().slice(0, 10);
+                                setEditForm({...editForm, published_at: isoDate});
+                              }
                             }}
-                            className="h-9 w-40"
+                            dateFormat="dd/MM/yyyy"
+                            locale="it"
+                            minDate={new Date('2000-01-01')}
+                            maxDate={new Date('2050-12-31')}
+                            className="h-9 px-3 border border-slate-200 rounded-md focus:border-indigo-500 w-44"
+                            showMonthDropdown
+                            showYearDropdown
+                            dropdownMode="select"
                           />
                         </div>
 
@@ -526,7 +526,6 @@ export default function ArticleSubmission() {
                             </div>
                             <div className="flex flex-wrap gap-4 text-sm text-slate-500 mb-3">
                               <span>Autore: {article.author.name}</span>
-                              {/* EUROPEAN DATE DISPLAY */}
                               <span>Data: {formatDateDisplay(article.published_at)}</span>
                               <span>Slug: {article.slug}</span>
                             </div>
