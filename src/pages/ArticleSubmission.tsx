@@ -57,10 +57,13 @@ export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTool, setActiveTool] = useState<Tool>(() => {
-  // Load from localStorage on initial render
-    const saved = localStorage.getItem('lumina_editor_tool');
-    return (saved as Tool) || 'publish';
-  });
+  const saved = localStorage.getItem('lumina_editor_tool');
+  return (saved as Tool) || 'publish';
+});
+  const handleToolChange = (tool: Tool) => {
+  setActiveTool(tool);
+  localStorage.setItem('lumina_editor_tool', tool);
+};
 
 // Update the tool switcher to save to localStorage:
 const handleToolChange = (tool: Tool) => {
@@ -124,7 +127,7 @@ const handleToolChange = (tool: Tool) => {
     });
 
     if (result.success) {
-      toast({ title: "Articolo Pubblicato", description: `ID: ${result.id}` });
+      toast({title: "Articolo Pubblicato", description: `"${formData.title}" è stato pubblicato con successo!`});
       // Reset including excerpt
       setFormData({
         title: '',
