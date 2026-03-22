@@ -234,7 +234,7 @@ const handleToolChange = (tool: Tool) => {
         
         <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <button
-            onClick={() => setActiveTool('publish')}
+            onClick={() => handleToolChange('publish')}
             style={{
               padding: '12px 16px',
               borderRadius: '8px',
@@ -251,12 +251,12 @@ const handleToolChange = (tool: Tool) => {
               transition: 'all 0.2s'
             }}
           >
-            <PlusCircle className="w-5 h-5" />
+            <Settings className="w-5 h-5" />
             Pubblicazione Articoli
           </button>
           
           <button
-            onClick={() => setActiveTool('manage')}
+            onClick={() => handleToolChange('manage')}
             style={{
               padding: '12px 16px',
               borderRadius: '8px',
