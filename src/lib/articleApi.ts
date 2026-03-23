@@ -54,7 +54,7 @@ export async function submitArticle(data: {
 
     // 3. Create article with custom timestamp
     const slug = `${generateSlug(data.title)}-${Date.now()}`;
-    const excerpt = data.content.substring(0, 200) + '...';
+    const excerpt = data.excerpt || data.content.substring(0, 200) + '...';
     
     const { data: article, error: articleError } = await supabase
       .from('articles')
