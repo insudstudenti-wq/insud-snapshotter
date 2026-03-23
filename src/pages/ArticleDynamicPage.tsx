@@ -4,16 +4,132 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, User, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, User, ExternalLink, Box, Info, AlertTriangle, CheckCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { getArticleBySlug } from "@/lib/articleApi";
-import type { ArticleWithRelations } from "@/lib/supabase";
+import type { ArticleWithRelations, ContentBlock } from "@/lib/supabase";
 
 // Same read time calculation as old system
 const getReadTime = (content: string): string => {
   const words = content.split(' ').length;
   const minutes = Math.ceil(words / 200);
   return `${minutes} min`;
+};
+
+// TextBox style configurations
+const textBoxStyles = {
+  default: { bg: 'bg-muted/50', border: 'border-border', icon: Box },
+  info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: Info },
+  warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: AlertTriangle },
+  success: { bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle },
+};
+
+// Parse content blocks from article
+const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
+  // If article has content_blocks stored, use those
+  if (article.content_blocks && article.content_blocks.length > 0) {
+    return article.content_blocks;
+  }
+  
+  // Otherwise, parse legacy format or split by newlines
+  const blocks: ContentBlock[] = [];
+  const lines = article.content.split('\n');
+  let currentParagraph = '';
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Check for textbox pattern: [BOX: Title] or similar
+    const boxMatch = trimmedLine.match(/^\[BOX:\s*(.+?)\]$/i);
+    if (boxMatch) {
+      // Save current paragraph if exists
+      if (currentParagraph.trim()) {
+        blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
+        currentParagraph = '';
+      }
+      // Text box content follows in next lines until empty line or next box
+      continue;
+    }
+    
+    // Check if this might be textbox content (if previous line was a box marker)
+    if (blocks.length > 0 && blocks[blocks.length - 1].type === 'textbox') {
+      const lastBlock = blocks[blocks.length - 1];
+      if (!lastBlock.content && trimmedLine) {
+        // This is the first content line after box marker
+        lastBlock.content = trimmedLine;
+        continue;
+      } else if (lastBlock.content && trimmedLine) {
+        lastBlock.content += '\n' + trimmedLine;
+        continue;
+      }
+    }
+    
+    // Check for URL list pattern (links section)
+    const urlMatch = trimmedLine.match(/^(https?:\/\/\S+)\s*-\s*(.+)$/);
+    if (urlMatch && blocks.length > 0) {
+      // This is a link line, append to last textbox or create new one
+      const lastBlock = blocks[blocks.length - 1];
+      if (lastBlock && lastBlock.type === 'textbox') {
+        lastBlock.content += (lastBlock.content ? '\n' : '') + `[${urlMatch[2]}](${urlMatch[1]})`;
+        continue;
+      }
+    }
+    
+    // Regular paragraph content
+    if (trimmedLine) {
+      if (currentParagraph) {
+        currentParagraph += '\n' + trimmedLine;
+      } else {
+        currentParagraph = trimmedLine;
+      }
+    } else if (currentParagraph.trim()) {
+      blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
+      currentParagraph = '';
+    }
+  }
+  
+  // Don't forget the last paragraph
+  if (currentParagraph.trim()) {
+    blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
+  }
+  
+  return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: article.content }];
+};
+
+// Render content with link detection
+const renderContentWithLinks = (content: string) => {
+  // URL regex pattern
+  const urlRegex = /(https?:\/\/[^\s\]\)]+)/g;
+  
+  // Split content by URLs and render
+  const parts = content.split(urlRegex);
+  const matches = content.match(urlRegex) || [];
+  
+  const result: React.ReactNode[] = [];
+  
+  parts.forEach((part, index) => {
+    // Add the text part
+    if (part) {
+      result.push(<span key={`text-${index}`}>{part}</span>);
+    }
+    // Add the URL if exists
+    if (matches[index]) {
+      result.push(
+        <a
+          key={`link-${index}`}
+          href={matches[index]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1 text-sky hover:underline font-medium transition-colors"
+        >
+          <ExternalLink className="w-3 h-3" />
+          {matches[index]}
+        </a>
+      );
+    }
+  });
+  
+  return result;
 };
 
 const ArticleDynamicPage = () => {
@@ -56,7 +172,7 @@ const ArticleDynamicPage = () => {
         <Navbar />
         <div className="container mx-auto px-4 pt-32 pb-20 text-center">
           <h1 className="text-3xl font-bold text-foreground mb-4">Articolo non trovato</h1>
-          <p className="text-muted-foreground mb-8">L'articolo che cerchi non esiste.</p>
+          <p className="text-muted-foreground mb-8">L&apos;articolo che cerchi non esiste.</p>
           <Link to="/lumina_dynamic">
             <Button variant="outline" className="gap-2 rounded-full">
               <ArrowLeft className="w-4 h-4" /> Torna a LUMINA DYNAMIC
@@ -77,8 +193,8 @@ const ArticleDynamicPage = () => {
     });
   };
 
-  // Split content by newlines to match old paragraph structure
-  const paragraphs = article.content.split('\n').filter(p => p.trim());
+  // Get content blocks
+  const contentBlocks = parseContentBlocks(article);
 
   return (
     <div className="min-h-screen">
@@ -114,12 +230,41 @@ const ArticleDynamicPage = () => {
               <p className="text-lg text-muted-foreground italic mb-8">{article.excerpt}</p>
             )}
 
+            {/* Render Content Blocks */}
             <div className="space-y-6">
-              {paragraphs.map((paragraph, i) => (
-                <p key={i} className="text-foreground/90 leading-relaxed text-[1.05rem]">
-                  {paragraph}
-                </p>
-              ))}
+              {contentBlocks.map((block, index) => {
+                if (block.type === 'paragraph') {
+                  return (
+                    <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                      {renderContentWithLinks(block.content)}
+                    </p>
+                  );
+                }
+                
+                if (block.type === 'textbox') {
+                  const style = textBoxStyles[block.style || 'default'];
+                  const Icon = style.icon;
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`mt-8 p-6 ${style.bg} border ${style.border} rounded-2xl`}
+                    >
+                      {block.title && (
+                        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <Icon className="w-5 h-5" />
+                          {block.title}
+                        </h3>
+                      )}
+                      <div className="text-foreground/80 text-[1.05rem] leading-relaxed whitespace-pre-wrap">
+                        {renderContentWithLinks(block.content)}
+                      </div>
+                    </div>
+                  );
+                }
+                
+                return null;
+              })}
             </div>
 
             {article.tags.length > 0 && (

@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import type { ArticleWithRelations } from './supabase';
+import type { ArticleWithRelations, ContentBlock } from './supabase';
 
 const generateSlug = (title: string): string => {
   return title
@@ -16,6 +16,8 @@ export async function submitArticle(data: {
   category?: string;
   tags: string[];
   publishedAt: string;
+  contentBlocks?: ContentBlock[];
+  excerpt?: string;
 }) {
   try {
     // 1. Handle author (create if new)
@@ -56,6 +58,11 @@ export async function submitArticle(data: {
     const slug = `${generateSlug(data.title)}-${Date.now()}`;
     const excerpt = data.excerpt || data.content.substring(0, 200) + '...';
     
+    // Convert content blocks to JSON if provided
+    const contentBlocksJson = data.contentBlocks && data.contentBlocks.length > 0 
+      ? data.contentBlocks 
+      : null;
+    
     const { data: article, error: articleError } = await supabase
       .from('articles')
       .insert({
@@ -66,6 +73,7 @@ export async function submitArticle(data: {
         author_id: authorId,
         category_id: categoryId,
         published_at: data.publishedAt,
+        content_blocks: contentBlocksJson,
       })
       .select('id')
       .single();
@@ -115,7 +123,8 @@ export async function getArticles(): Promise<ArticleWithRelations[]> {
     .select(`
       *,
       author:authors(id, name),
-      category:categories(id, name, slug)
+      category:categories(id, name, slug),
+      content_blocks
     `)
     .order('published_at', { ascending: false });
 
@@ -172,7 +181,8 @@ export async function getArticleBySlug(slug: string): Promise<ArticleWithRelatio
     .select(`
       *,
       author:authors(id, name),
-      category:categories(id, name, slug)
+      category:categories(id, name, slug),
+      content_blocks
     `)
     .eq('slug', slug)
     .single();
@@ -265,6 +275,7 @@ export async function updateArticle(
     excerpt?: string;
     published_at?: string;
     author?: string;
+    contentBlocks?: ContentBlock[];
   }
 ) {
   try {
@@ -280,6 +291,11 @@ export async function updateArticle(
     }
     if (data.excerpt) updates.excerpt = data.excerpt;
     if (data.published_at) updates.published_at = data.published_at;
+    if (data.contentBlocks !== undefined) {
+      updates.content_blocks = data.contentBlocks && data.contentBlocks.length > 0 
+        ? data.contentBlocks 
+        : null;
+    }
     
     if (data.author) {
       let authorId: number;

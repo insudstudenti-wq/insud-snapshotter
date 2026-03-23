@@ -39,8 +39,14 @@ export type Article = {
   published_at?: string;
 };
 
+// Content block types for rich article content
+export type ContentBlock = 
+  | { type: 'paragraph'; content: string }
+  | { type: 'textbox'; title: string; content: string; style?: 'default' | 'info' | 'warning' | 'success' };
+
 export type ArticleWithRelations = Article & {
   author: Author;
   tags: Tag[];
   category?: Category;
+  content_blocks?: ContentBlock[];
 };

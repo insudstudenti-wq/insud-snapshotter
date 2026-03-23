@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
-import type { ArticleWithRelations } from '@/lib/supabase';
-import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag } from 'lucide-react';
+import type { ArticleWithRelations, ContentBlock } from '@/lib/supabase';
+import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 type Tool = 'publish' | 'manage';
+type BlockType = 'paragraph' | 'textbox';
 
 // Complete interface with all fields
 interface ArticleFormData {
@@ -22,8 +23,9 @@ interface ArticleFormData {
   content: string;
   category: string;
   tags: string;
-  publishedAt: string; // ISO format YYYY-MM-DD
-  excerpt: string; // Article summary/description
+  publishedAt: string;
+  excerpt: string;
+  contentBlocks: ContentBlock[];
 }
 
 interface EditingArticle {
@@ -34,6 +36,7 @@ interface EditingArticle {
   excerpt: string;
   published_at: string;
   tags: string;
+  contentBlocks: ContentBlock[];
 }
 
 // Helper: Format ISO to European DD/MM/YYYY for display
@@ -53,19 +56,27 @@ const formatDateDisplay = (isoTimestamp: string): string => {
   });
 };
 
+// TextBox styles
+const textBoxStyles = {
+  default: { bg: 'bg-muted/50', border: 'border-border', icon: Box },
+  info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: Type },
+  warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: Type },
+  success: { bg: 'bg-green-50', border: 'border-green-200', icon: Type },
+};
+
 export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTool, setActiveTool] = useState<Tool>(() => {
-  const saved = localStorage.getItem('lumina_editor_tool');
-  return (saved as Tool) || 'publish';
-});
+    const saved = localStorage.getItem('lumina_editor_tool');
+    return (saved as Tool) || 'publish';
+  });
   const handleToolChange = (tool: Tool) => {
     setActiveTool(tool);
     localStorage.setItem('lumina_editor_tool', tool);
   };
   
-  // Publish form state - includes excerpt from the start
+  // Publish form state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<ArticleFormData>({
     title: '',
@@ -74,8 +85,13 @@ export default function ArticleSubmission() {
     category: 'Lumina',
     tags: '',
     publishedAt: new Date().toISOString().slice(0, 10),
-    excerpt: '', // Initialized empty
+    excerpt: '',
+    contentBlocks: [],
   });
+
+  // Content Builder state
+  const [showPreview, setShowPreview] = useState(true);
+  const [activeBlockIndex, setActiveBlockIndex] = useState<number | null>(null);
 
   // Manage state
   const [articles, setArticles] = useState<ArticleWithRelations[]>([]);
@@ -101,27 +117,86 @@ export default function ArticleSubmission() {
     }
   };
 
+  // Content Block Management
+  const addBlock = (type: BlockType) => {
+    const newBlock: ContentBlock = type === 'paragraph' 
+      ? { type: 'paragraph', content: '' }
+      : { type: 'textbox', title: '', content: '', style: 'default' };
+    
+    setFormData(prev => ({
+      ...prev,
+      contentBlocks: [...prev.contentBlocks, newBlock]
+    }));
+    setActiveBlockIndex(formData.contentBlocks.length);
+  };
+
+  const updateBlock = (index: number, updates: Partial<ContentBlock>) => {
+    setFormData(prev => ({
+      ...prev,
+      contentBlocks: prev.contentBlocks.map((block, i) => 
+        i === index ? { ...block, ...updates } as ContentBlock : block
+      )
+    }));
+  };
+
+  const removeBlock = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      contentBlocks: prev.contentBlocks.filter((_, i) => i !== index)
+    }));
+    if (activeBlockIndex === index) setActiveBlockIndex(null);
+    if (activeBlockIndex !== null && activeBlockIndex > index) {
+      setActiveBlockIndex(activeBlockIndex - 1);
+    }
+  };
+
+  const moveBlock = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= formData.contentBlocks.length) return;
+    
+    const blocks = [...formData.contentBlocks];
+    [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
+    setFormData(prev => ({ ...prev, contentBlocks: blocks }));
+    setActiveBlockIndex(newIndex);
+  };
+
+  // Sync content blocks to plain text for backwards compatibility
+  const syncBlocksToContent = (): string => {
+    return formData.contentBlocks
+      .map(block => {
+        if (block.type === 'paragraph') return block.content;
+        if (block.type === 'textbox') return `[BOX: ${block.title}]\n${block.content}`;
+        return '';
+      })
+      .filter(Boolean)
+      .join('\n\n');
+  };
+
   // Publish handlers
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Convert content blocks to plain text for storage
+    const plainContent = syncBlocksToContent() || formData.content;
+
     // Convert ISO date + midnight time for database
     const fullTimestamp = formData.publishedAt + 'T00:00:00';
 
-    // Include excerpt in submission
     const result = await submitArticle({
       title: formData.title,
       author: formData.author,
-      content: formData.content,
+      content: plainContent,
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       publishedAt: fullTimestamp,
+      excerpt: formData.excerpt || undefined,
+      contentBlocks: formData.contentBlocks.length > 0 ? formData.contentBlocks : undefined,
     });
 
     if (result.success) {
       toast({title: "Articolo Pubblicato", description: `"${formData.title}" è stato pubblicato con successo!`});
-      // Reset including excerpt
+      // Reset form
       setFormData({
         title: '',
         author: '',
@@ -129,7 +204,8 @@ export default function ArticleSubmission() {
         category: 'Lumina',
         tags: '',
         publishedAt: new Date().toISOString().slice(0, 10),
-        excerpt: '', // Reset to empty
+        excerpt: '',
+        contentBlocks: [],
       });
     } else {
       toast({ title: "Errore", description: result.error, variant: "destructive" });
@@ -147,14 +223,18 @@ export default function ArticleSubmission() {
     setEditingId(article.id);
     const dateOnly = article.published_at ? article.published_at.slice(0, 10) : '';
     
+    // Parse content blocks from article if they exist
+    const contentBlocks: ContentBlock[] = article.content_blocks || [];
+    
     setEditForm({
       id: article.id,
       title: article.title,
       author: article.author.name,
       content: article.content,
-      excerpt: article.excerpt || '', // Include excerpt
+      excerpt: article.excerpt || '',
       published_at: dateOnly,
       tags: article.tags.map(t => t.name).join(', '),
+      contentBlocks: contentBlocks,
     });
   };
 
@@ -171,9 +251,10 @@ export default function ArticleSubmission() {
     const result = await updateArticle(editForm.id, {
       title: editForm.title,
       content: editForm.content,
-      excerpt: editForm.excerpt, // Include in update
+      excerpt: editForm.excerpt,
       published_at: fullTimestamp,
       author: editForm.author,
+      contentBlocks: editForm.contentBlocks.length > 0 ? editForm.contentBlocks : undefined,
     });
 
     if (result.success) {
@@ -247,7 +328,7 @@ export default function ArticleSubmission() {
               transition: 'all 0.2s'
             }}
           >
-            <Settings className="w-5 h-5" />
+            <PlusCircle className="w-5 h-5" />
             Pubblicazione Articoli
           </button>
           
@@ -299,14 +380,14 @@ export default function ArticleSubmission() {
         
         {/* PUBLISH TOOL */}
         {activeTool === 'publish' && (
-          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="space-y-2 text-center pb-8">
                 <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
                   Pubblica Articolo
                 </CardTitle>
                 <CardDescription className="text-lg text-slate-600">
-                  Crea e pubblica un nuovo articolo su LUMINA
+                  Crea e pubblica un nuovo articolo su LUMINA con il Content Builder
                 </CardDescription>
               </CardHeader>
               
@@ -346,7 +427,7 @@ export default function ArticleSubmission() {
                     />
                   </div>
 
-                  {/* Date with react-datepicker */}
+                  {/* Date */}
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-slate-700">
                       Data Pubblicazione *
@@ -374,7 +455,7 @@ export default function ArticleSubmission() {
                     </div>
                   </div>
 
-                  {/* EXCERPT/SUMMARY FIELD - ADDED HERE */}
+                  {/* Excerpt */}
                   <div className="space-y-2">
                     <Label htmlFor="excerpt" className="text-sm font-semibold text-slate-700">
                       Sommario/Descrizione
@@ -394,21 +475,220 @@ export default function ArticleSubmission() {
                     </p>
                   </div>
 
-                  {/* Content */}
+                  {/* Content Builder Toolbar */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                        <Box className="w-4 h-4" />
+                        Content Builder
+                      </Label>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowPreview(!showPreview)}
+                          className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 px-2 py-1 rounded"
+                        >
+                          {showPreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                          {showPreview ? 'Nascondi Preview' : 'Mostra Preview'}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Toolbar */}
+                    <div className="bg-slate-100 p-4 rounded-lg border border-slate-200">
+                      <p className="text-xs text-slate-500 mb-3">Aggiungi blocchi di contenuto:</p>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addBlock('paragraph')}
+                          className="flex items-center gap-1 bg-white"
+                        >
+                          <Type className="w-4 h-4" />
+                          Paragrafo
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addBlock('textbox')}
+                          className="flex items-center gap-1 bg-white"
+                        >
+                          <Box className="w-4 h-4" />
+                          Text Box
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Content Blocks Editor */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Left: Block Editor */}
+                      <div className="space-y-3">
+                        <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                          Blocchi ({formData.contentBlocks.length})
+                        </Label>
+                        
+                        {formData.contentBlocks.length === 0 && (
+                          <div className="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-300">
+                            <p className="text-sm text-slate-500">
+                              Nessun blocco ancora. Usa la toolbar sopra per aggiungere contenuto.
+                            </p>
+                          </div>
+                        )}
+
+                        {formData.contentBlocks.map((block, index) => (
+                          <div
+                            key={index}
+                            className={`border rounded-lg overflow-hidden transition-all ${
+                              activeBlockIndex === index 
+                                ? 'border-indigo-500 ring-1 ring-indigo-500' 
+                                : 'border-slate-200 hover:border-slate-300'
+                            }`}
+                            onClick={() => setActiveBlockIndex(index)}
+                          >
+                            {/* Block Header */}
+                            <div className="bg-slate-50 px-3 py-2 flex items-center justify-between border-b border-slate-200">
+                              <div className="flex items-center gap-2">
+                                <GripVertical className="w-4 h-4 text-slate-400" />
+                                <span className="text-xs font-medium text-slate-600">
+                                  {block.type === 'paragraph' ? 'Paragrafo' : 'Text Box'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); moveBlock(index, 'up'); }}
+                                  disabled={index === 0}
+                                  className="p-1 rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <ArrowUp className="w-3 h-3 text-slate-600" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); moveBlock(index, 'down'); }}
+                                  disabled={index === formData.contentBlocks.length - 1}
+                                  className="p-1 rounded hover:bg-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <ArrowDown className="w-3 h-3 text-slate-600" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); removeBlock(index); }}
+                                  className="p-1 rounded hover:bg-red-100 text-red-500"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Block Content */}
+                            <div className="p-3 space-y-3">
+                              {block.type === 'textbox' && (
+                                <>
+                                  <div>
+                                    <Label className="text-xs text-slate-500">Stile</Label>
+                                    <select
+                                      value={block.style || 'default'}
+                                      onChange={(e) => updateBlock(index, { style: e.target.value as any })}
+                                      className="mt-1 w-full text-sm border border-slate-200 rounded px-2 py-1"
+                                    >
+                                      <option value="default">Default</option>
+                                      <option value="info">Info (Blu)</option>
+                                      <option value="warning">Warning (Arancione)</option>
+                                      <option value="success">Success (Verde)</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-slate-500">Titolo</Label>
+                                    <Input
+                                      value={block.title}
+                                      onChange={(e) => updateBlock(index, { title: e.target.value })}
+                                      placeholder="Titolo del box..."
+                                      className="mt-1 h-9 text-sm"
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              <div>
+                                <Label className="text-xs text-slate-500">Contenuto</Label>
+                                <Textarea
+                                  value={block.content}
+                                  onChange={(e) => updateBlock(index, { content: e.target.value })}
+                                  placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
+                                  rows={block.type === 'textbox' ? 4 : 6}
+                                  className="mt-1 text-sm resize-y"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Right: Preview */}
+                      {showPreview && (
+                        <div className="space-y-3">
+                          <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+                            Preview
+                          </Label>
+                          <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm min-h-[400px]">
+                            {formData.contentBlocks.length === 0 ? (
+                              <p className="text-slate-400 text-center py-8">Nessun contenuto da visualizzare</p>
+                            ) : (
+                              <div className="space-y-4">
+                                {formData.contentBlocks.map((block, index) => {
+                                  if (block.type === 'paragraph') {
+                                    return (
+                                      <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                                        {block.content || <span className="text-slate-300 italic">Paragrafo vuoto...</span>}
+                                      </p>
+                                    );
+                                  }
+                                  if (block.type === 'textbox') {
+                                    const style = textBoxStyles[block.style || 'default'];
+                                    const Icon = style.icon;
+                                    return (
+                                      <div key={index} className={`mt-6 p-5 ${style.bg} border ${style.border} rounded-xl`}>
+                                        {block.title && (
+                                          <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
+                                            <Icon className="w-5 h-5" />
+                                            {block.title}
+                                          </h3>
+                                        )}
+                                        <div className="text-foreground/80 text-sm whitespace-pre-wrap">
+                                          {block.content || <span className="text-slate-400 italic">Contenuto vuoto...</span>}
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Legacy Content Field (Hidden but kept for compatibility) */}
                   <div className="space-y-2">
-                    <Label htmlFor="content" className="text-sm font-semibold text-slate-700">
-                      Contenuto *
+                    <Label htmlFor="content" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                      Contenuto Plain Text
+                      <Badge variant="secondary" className="text-xs">Legacy</Badge>
                     </Label>
                     <Textarea
                       id="content"
                       name="content"
-                      required
-                      rows={12}
-                      placeholder="Scrivi il contenuto..."
+                      rows={6}
+                      placeholder="Contenuto in formato testo (backup se i blocchi sono vuoti)..."
                       value={formData.content}
                       onChange={handleChange}
-                      className="min-h-[300px] border-slate-200 focus:border-indigo-500 resize-y font-mono text-sm leading-relaxed"
+                      className="border-slate-200 focus:border-indigo-500 resize-y font-mono text-sm leading-relaxed"
                     />
+                    <p className="text-xs text-slate-500">
+                      Usato come fallback se i Content Blocks sono vuoti. Verrà automaticamente sincronizzato con i blocchi.
+                    </p>
                   </div>
 
                   {/* Tags */}
