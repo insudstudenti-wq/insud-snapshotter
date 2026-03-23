@@ -24,6 +24,13 @@ const textBoxStyles = {
   success: { bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle },
 };
 
+// Link style configurations
+const linkStyles = {
+  default: 'text-sky hover:underline inline-flex items-center gap-1',
+  button: 'inline-block bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy/90 transition-colors',
+  outline: 'inline-block border-2 border-navy text-navy px-6 py-3 rounded-lg hover:bg-navy/10 transition-colors',
+};
+
 // Parse content blocks from article
 const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
   // If article has content_blocks stored, use those
@@ -48,6 +55,17 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
         currentParagraph = '';
       }
       // Text box content follows in next lines until empty line or next box
+      continue;
+    }
+    
+    // Check for link pattern: [LINK: Label](URL)
+    const linkMatch = trimmedLine.match(/^\[LINK:\s*(.+?)\]\((.+?)\)$/i);
+    if (linkMatch) {
+      if (currentParagraph.trim()) {
+        blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
+        currentParagraph = '';
+      }
+      blocks.push({ type: 'link', label: linkMatch[1], url: linkMatch[2], style: 'default' });
       continue;
     }
     
@@ -259,6 +277,23 @@ const ArticleDynamicPage = () => {
                       <div className="text-foreground/80 text-[1.05rem] leading-relaxed whitespace-pre-wrap">
                         {renderContentWithLinks(block.content)}
                       </div>
+                    </div>
+                  );
+                }
+                
+                if (block.type === 'link') {
+                  const linkStyle = linkStyles[block.style || 'default'];
+                  return (
+                    <div key={index} className="my-6">
+                      <a
+                        href={block.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={linkStyle}
+                      >
+                        {block.label}
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
                     </div>
                   );
                 }

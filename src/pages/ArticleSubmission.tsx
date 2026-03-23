@@ -9,12 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
 import type { ArticleWithRelations, ContentBlock } from '@/lib/supabase';
-import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 type Tool = 'publish' | 'manage';
-type BlockType = 'paragraph' | 'textbox';
+type BlockType = 'paragraph' | 'textbox' | 'link';
 
 // Complete interface with all fields
 interface ArticleFormData {
@@ -62,6 +62,13 @@ const textBoxStyles = {
   info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: Type },
   warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: Type },
   success: { bg: 'bg-green-50', border: 'border-green-200', icon: Type },
+};
+
+// Link styles
+const linkStyles = {
+  default: { className: 'text-sky hover:underline', label: 'Default' },
+  button: { className: 'inline-block bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy/90 transition-colors', label: 'Bottone' },
+  outline: { className: 'inline-block border-2 border-navy text-navy px-6 py-3 rounded-lg hover:bg-navy/10 transition-colors', label: 'Outline' },
 };
 
 export default function ArticleSubmission() {
@@ -119,9 +126,12 @@ export default function ArticleSubmission() {
 
   // Content Block Management
   const addBlock = (type: BlockType) => {
-    const newBlock: ContentBlock = type === 'paragraph' 
-      ? { type: 'paragraph', content: '' }
-      : { type: 'textbox', title: '', content: '', style: 'default' };
+    const newBlock: ContentBlock = 
+      type === 'paragraph' 
+        ? { type: 'paragraph', content: '' }
+        : type === 'textbox'
+        ? { type: 'textbox', title: '', content: '', style: 'default' }
+        : { type: 'link', label: '', url: '', style: 'default' };
     
     setFormData(prev => ({
       ...prev,
@@ -166,6 +176,7 @@ export default function ArticleSubmission() {
       .map(block => {
         if (block.type === 'paragraph') return block.content;
         if (block.type === 'textbox') return `[BOX: ${block.title}]\n${block.content}`;
+        if (block.type === 'link') return `[LINK: ${block.label}](${block.url})`;
         return '';
       })
       .filter(Boolean)
@@ -518,6 +529,16 @@ export default function ArticleSubmission() {
                           <Box className="w-4 h-4" />
                           Text Box
                         </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addBlock('link')}
+                          className="flex items-center gap-1 bg-white"
+                        >
+                          <LinkIcon className="w-4 h-4" />
+                          Link
+                        </Button>
                       </div>
                     </div>
 
@@ -552,7 +573,7 @@ export default function ArticleSubmission() {
                               <div className="flex items-center gap-2">
                                 <GripVertical className="w-4 h-4 text-slate-400" />
                                 <span className="text-xs font-medium text-slate-600">
-                                  {block.type === 'paragraph' ? 'Paragrafo' : 'Text Box'}
+                                  {block.type === 'paragraph' ? 'Paragrafo' : block.type === 'textbox' ? 'Text Box' : 'Link'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
@@ -610,16 +631,53 @@ export default function ArticleSubmission() {
                                   </div>
                                 </>
                               )}
-                              <div>
-                                <Label className="text-xs text-slate-500">Contenuto</Label>
-                                <Textarea
-                                  value={block.content}
-                                  onChange={(e) => updateBlock(index, { content: e.target.value })}
-                                  placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
-                                  rows={block.type === 'textbox' ? 4 : 6}
-                                  className="mt-1 text-sm resize-y"
-                                />
-                              </div>
+                              {block.type === 'link' && (
+                                <>
+                                  <div>
+                                    <Label className="text-xs text-slate-500">Stile Link</Label>
+                                    <select
+                                      value={block.style || 'default'}
+                                      onChange={(e) => updateBlock(index, { style: e.target.value as 'default' | 'button' | 'outline' })}
+                                      className="mt-1 w-full text-sm border border-slate-200 rounded px-2 py-1"
+                                    >
+                                      <option value="default">Default (testo)</option>
+                                      <option value="button">Bottone</option>
+                                      <option value="outline">Outline</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-slate-500">Testo del Link</Label>
+                                    <Input
+                                      value={block.label}
+                                      onChange={(e) => updateBlock(index, { label: e.target.value })}
+                                      placeholder="Clicca qui..."
+                                      className="mt-1 h-9 text-sm"
+                                    />
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-slate-500">URL (indirizzo)</Label>
+                                    <Input
+                                      type="url"
+                                      value={block.url}
+                                      onChange={(e) => updateBlock(index, { url: e.target.value })}
+                                      placeholder="https://www.esempio.com"
+                                      className="mt-1 h-9 text-sm"
+                                    />
+                                  </div>
+                                </>
+                              )}
+                              {block.type !== 'link' && (
+                                <div>
+                                  <Label className="text-xs text-slate-500">Contenuto</Label>
+                                  <Textarea
+                                    value={block.content}
+                                    onChange={(e) => updateBlock(index, { content: e.target.value })}
+                                    placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
+                                    rows={block.type === 'textbox' ? 4 : 6}
+                                    className="mt-1 text-sm resize-y"
+                                  />
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -658,6 +716,25 @@ export default function ArticleSubmission() {
                                         <div className="text-foreground/80 text-sm whitespace-pre-wrap">
                                           {block.content || <span className="text-slate-400 italic">Contenuto vuoto...</span>}
                                         </div>
+                                      </div>
+                                    );
+                                  }
+                                  if (block.type === 'link') {
+                                    const style = linkStyles[block.style || 'default'];
+                                    return (
+                                      <div key={index} className="my-4">
+                                        {block.url ? (
+                                          <a
+                                            href={block.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={style.className}
+                                          >
+                                            {block.label || 'Link'}
+                                          </a>
+                                        ) : (
+                                          <span className="text-slate-400 italic">Link senza URL...</span>
+                                        )}
                                       </div>
                                     );
                                   }
