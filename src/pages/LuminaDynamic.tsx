@@ -170,9 +170,20 @@ const LuminaDynamic = () => {
                     transition={{ delay: i * 0.1 }}
                     className="bg-card border border-border rounded-2xl p-6 hover:shadow-lg transition-shadow cursor-pointer h-full"
                   >
-                    <Badge variant="secondary" className="mb-4">
-                      {article.category?.name || 'LUMINA'}
-                    </Badge>
+                    {article.tags.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {article.tags.slice(0, 3).map((tag) => (
+                          <Badge key={tag.id} variant="secondary" className="text-xs">
+                            {tag.name}
+                          </Badge>
+                        ))}
+                        {article.tags.length > 3 && (
+                          <Badge variant="secondary" className="text-xs">+{article.tags.length - 3}</Badge>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge variant="secondary" className="mb-4">LUMINA</Badge>
+                    )}
                     <h3 className="text-lg font-semibold text-foreground mb-3 line-clamp-2">
                       {article.title}
                     </h3>
