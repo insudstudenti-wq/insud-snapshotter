@@ -117,7 +117,6 @@ export default function ArticleSubmission() {
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       publishedAt: fullTimestamp,
-      });
     });
 
     if (result.success) {
