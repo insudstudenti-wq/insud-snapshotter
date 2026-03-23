@@ -61,15 +61,9 @@ export default function ArticleSubmission() {
   return (saved as Tool) || 'publish';
 });
   const handleToolChange = (tool: Tool) => {
-  setActiveTool(tool);
-  localStorage.setItem('lumina_editor_tool', tool);
-};
-
-// Update the tool switcher to save to localStorage:
-const handleToolChange = (tool: Tool) => {
-  setActiveTool(tool);
-  localStorage.setItem('lumina_editor_tool', tool);
-};
+    setActiveTool(tool);
+    localStorage.setItem('lumina_editor_tool', tool);
+  };
   
   // Publish form state - includes excerpt from the start
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -123,7 +117,6 @@ const handleToolChange = (tool: Tool) => {
       category: formData.category,
       tags: formData.tags.split(',').map(tag => tag.trim()).filter(Boolean),
       publishedAt: fullTimestamp,
-      excerpt: formData.excerpt, // Included in API call
     });
 
     if (result.success) {
