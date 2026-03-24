@@ -12,5 +12,6 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /lumina/submit
 
 Sitemap: https://www.insud.eu/sitemap.xml

@@ -34,7 +34,7 @@ const projects = [
     darkBg: false,
     meta: {
       date: "26 Novembre 2025 - ore 18:30",
-      location: "Università Bocconi, Via Sarfatti 25 - Aula 35",
+      location: "Via Sarfatti 25 - Aula 35",
     },
   },
 ];
