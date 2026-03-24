@@ -6,6 +6,26 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Clock, Calendar, User, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { articles, getReadTime } from "@/data/articles";
+import { cleanHtmlContent } from "@/lib/articleSubmission";
+
+// Render paragraph content, supporting both HTML and plain text
+const renderParagraph = (content: string): React.ReactNode | { __html: string } => {
+  if (!content) return null;
+  
+  // Check if content contains HTML tags (more robust check)
+  // Matches strings that start with optional whitespace followed by <tag...>
+  if (/^[\s]*<[a-zA-Z][^>]*>/.test(content) || /<[a-z][\s\S]*>/i.test(content)) {
+    // Return as object to be used with dangerouslySetInnerHTML by caller
+    return { __html: cleanHtmlContent(content) };
+  }
+  
+  return <>{content}</>;
+};
+
+// Type guard to check if content is HTML object
+const isHtmlObject = (content: React.ReactNode): content is { __html: string } => {
+  return typeof content === 'object' && content !== null && '__html' in content;
+};
 
 const ArticlePage = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -61,12 +81,24 @@ const ArticlePage = () => {
 
             <p className="text-lg text-muted-foreground italic mb-8">{article.summary}</p>
 
-            <div className="space-y-6">
-              {article.content.map((paragraph, i) => (
-                <p key={i} className="text-foreground/90 leading-relaxed text-[1.05rem]">
-                  {paragraph}
-                </p>
-              ))}
+            <div className="space-y-6 article-content">
+              {article.content.map((paragraph, i) => {
+                const content = renderParagraph(paragraph);
+                if (isHtmlObject(content)) {
+                  return (
+                    <div 
+                      key={i} 
+                      className="text-foreground/90 leading-relaxed text-[1.05rem]"
+                      dangerouslySetInnerHTML={content}
+                    />
+                  );
+                }
+                return (
+                  <div key={i} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                    {content}
+                  </div>
+                );
+              })}
             </div>
 
             {article.links && (

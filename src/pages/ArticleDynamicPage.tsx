@@ -4,10 +4,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, User, ExternalLink } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { getArticleBySlug } from "@/lib/articleApi";
 import type { ArticleWithRelations, ContentBlock } from "@/lib/supabase";
+import { cleanHtmlContent } from "@/lib/articleSubmission";
 
 // Same read time calculation as old system
 const getReadTime = (content: string): string => {
@@ -100,9 +101,37 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
   return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: article.content }];
 };
 
-// Render content with markdown link detection [text](url)
-const renderContentWithLinks = (content: string) => {
+// Clean HTML content for safe rendering
+const cleanHtmlContent = (html: string): string => {
+  if (!html) return '';
+  
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  
+  // Remove script and style tags for security
+  const scripts = tempDiv.querySelectorAll('script, style, iframe, object, embed');
+  scripts.forEach(el => el.remove());
+  
+  // Ensure links have proper attributes
+  const links = tempDiv.querySelectorAll('a');
+  links.forEach(link => {
+    link.setAttribute('target', '_blank');
+    link.setAttribute('rel', 'noopener noreferrer');
+    link.classList.add('text-sky', 'hover:underline');
+  });
+  
+  return tempDiv.innerHTML;
+};
+
+// Render content with markdown link detection [text](url) (fallback for plain text)
+const renderContentWithLinks = (content: string): React.ReactNode | { __html: string } => {
   if (!content) return null;
+  
+  // Check if content contains HTML
+  if (content.includes('<') && content.includes('>')) {
+    // Return as object to be used with dangerouslySetInnerHTML by caller
+    return { __html: cleanHtmlContent(content) };
+  }
   
   // Split by markdown links [text](url)
   const parts = content.split(/(\[.*?\]\(.*?\))/g);
@@ -127,6 +156,11 @@ const renderContentWithLinks = (content: string) => {
     // Return plain text
     return <span key={index}>{part}</span>;
   });
+};
+
+// Type guard to check if content is HTML object
+const isHtmlObject = (content: React.ReactNode): content is { __html: string } => {
+  return typeof content === 'object' && content !== null && '__html' in content;
 };
 
 const ArticleDynamicPage = () => {
@@ -239,18 +273,29 @@ const ArticleDynamicPage = () => {
             )}
 
             {/* Render Content Blocks */}
-            <div className="space-y-6">
+            <div className="space-y-6 article-content">
               {contentBlocks.map((block, index) => {
                 if (block.type === 'paragraph') {
+                  const content = renderContentWithLinks(block.content);
+                  if (isHtmlObject(content)) {
+                    return (
+                      <div 
+                        key={index} 
+                        className="text-foreground/90 leading-relaxed text-[1.05rem]"
+                        dangerouslySetInnerHTML={content}
+                      />
+                    );
+                  }
                   return (
-                    <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem] whitespace-pre-wrap">
-                      {renderContentWithLinks(block.content)}
-                    </p>
+                    <div key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                      {content}
+                    </div>
                   );
                 }
                 
                 if (block.type === 'textbox') {
                   const style = textBoxStyles[block.style || 'default'];
+                  const content = renderContentWithLinks(block.content);
                   
                   return (
                     <div 
@@ -262,9 +307,16 @@ const ArticleDynamicPage = () => {
                           {block.title}
                         </h3>
                       )}
-                      <div className="text-foreground/80 text-[1.05rem] leading-relaxed whitespace-pre-wrap">
-                        {renderContentWithLinks(block.content)}
-                      </div>
+                      {isHtmlObject(content) ? (
+                        <div 
+                          className="text-foreground/80 text-[1.05rem] leading-relaxed"
+                          dangerouslySetInnerHTML={content}
+                        />
+                      ) : (
+                        <div className="text-foreground/80 text-[1.05rem] leading-relaxed">
+                          {content}
+                        </div>
+                      )}
                     </div>
                   );
                 }

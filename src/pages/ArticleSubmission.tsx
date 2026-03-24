@@ -9,89 +9,25 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
 import type { ArticleWithRelations, ContentBlock } from '@/lib/supabase';
-import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff, Link as LinkIcon, ExternalLink } from 'lucide-react';
+
+// Type for block updates
+type BlockUpdate = Partial<ContentBlock>;
+import {
+  toEuropeanDate,
+  formatDateDisplay,
+  syncBlocksToContent,
+  createInitialFormData,
+  textBoxStyles,
+  stripHtml,
+  type Tool,
+  type BlockType,
+  type ArticleFormData,
+  type EditingArticle,
+} from '@/lib/articleSubmission';
+import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
+import { RichTextEditor, RichTextContent } from '@/components/RichTextEditor';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
-type Tool = 'publish' | 'manage';
-type BlockType = 'paragraph' | 'textbox';
-
-// Complete interface with all fields
-interface ArticleFormData {
-  title: string;
-  author: string;
-  content: string;
-  category: string;
-  tags: string;
-  publishedAt: string;
-  excerpt: string;
-  contentBlocks: ContentBlock[];
-}
-
-interface EditingArticle {
-  id: number;
-  title: string;
-  author: string;
-  content: string;
-  excerpt: string;
-  published_at: string;
-  tags: string;
-  contentBlocks: ContentBlock[];
-}
-
-// Helper: Format ISO to European DD/MM/YYYY for display
-const toEuropeanDate = (isoDate: string): string => {
-  if (!isoDate) return '';
-  const [year, month, day] = isoDate.split('-');
-  return `${day}/${month}/${year}`;
-};
-
-// Helper: Format timestamp to European for article list
-const formatDateDisplay = (isoTimestamp: string): string => {
-  if (!isoTimestamp) return '';
-  return new Date(isoTimestamp).toLocaleDateString('it-IT', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-};
-
-// TextBox styles (no icon)
-const textBoxStyles = {
-  default: { bg: 'bg-muted/50', border: 'border-border' },
-  info: { bg: 'bg-blue-50', border: 'border-blue-200' },
-  warning: { bg: 'bg-amber-50', border: 'border-amber-200' },
-  success: { bg: 'bg-green-50', border: 'border-green-200' },
-};
-
-
-
-// Render content with markdown links [text](url)
-const renderContentWithLinks = (content: string) => {
-  if (!content) return null;
-  
-  // Split by markdown links [text](url)
-  const parts = content.split(/(\[.*?\]\(.*?\))/g);
-  
-  return parts.map((part, index) => {
-    const match = part.match(/^\[(.+?)\]\((.+?)\)$/);
-    if (match) {
-      const [, text, url] = match;
-      return (
-        <a
-          key={index}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sky hover:underline"
-        >
-          {text}
-        </a>
-      );
-    }
-    return <span key={index}>{part}</span>;
-  });
-};
 
 export default function ArticleSubmission() {
   const navigate = useNavigate();
@@ -107,16 +43,7 @@ export default function ArticleSubmission() {
   
   // Publish form state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<ArticleFormData>({
-    title: '',
-    author: '',
-    content: '',
-    category: 'Lumina',
-    tags: '',
-    publishedAt: new Date().toISOString().slice(0, 10),
-    excerpt: '',
-    contentBlocks: [],
-  });
+  const [formData, setFormData] = useState<ArticleFormData>(createInitialFormData());
 
   // Content Builder state
   const [showPreview, setShowPreview] = useState(true);
@@ -148,9 +75,9 @@ export default function ArticleSubmission() {
 
   // Content Block Management
   const addBlock = (type: BlockType) => {
-    const newBlock: ContentBlock = type === 'paragraph' 
-      ? { type: 'paragraph', content: '' }
-      : { type: 'textbox', title: '', content: '', style: 'default' };
+    const newBlock = type === 'paragraph' 
+      ? { type: 'paragraph' as const, content: '' }
+      : { type: 'textbox' as const, title: '', content: '', style: 'default' as const };
     
     setFormData(prev => ({
       ...prev,
@@ -159,7 +86,7 @@ export default function ArticleSubmission() {
     setActiveBlockIndex(formData.contentBlocks.length);
   };
 
-  const updateBlock = (index: number, updates: Partial<ContentBlock>) => {
+  const updateBlock = (index: number, updates: BlockUpdate) => {
     setFormData(prev => ({
       ...prev,
       contentBlocks: prev.contentBlocks.map((block, i) => 
@@ -189,25 +116,13 @@ export default function ArticleSubmission() {
     setActiveBlockIndex(newIndex);
   };
 
-  // Sync content blocks to plain text for backwards compatibility
-  const syncBlocksToContent = (): string => {
-    return formData.contentBlocks
-      .map(block => {
-        if (block.type === 'paragraph') return block.content;
-        if (block.type === 'textbox') return `[BOX: ${block.title || 'Box'}]\n${block.content}`;
-        return '';
-      })
-      .filter(Boolean)
-      .join('\n\n');
-  };
-
   // Publish handlers
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     // Convert content blocks to plain text for storage
-    const plainContent = syncBlocksToContent() || formData.content;
+    const plainContent = syncBlocksToContent(formData.contentBlocks) || formData.content;
 
     // Convert ISO date + midnight time for database
     const fullTimestamp = formData.publishedAt + 'T00:00:00';
@@ -226,16 +141,7 @@ export default function ArticleSubmission() {
     if (result.success) {
       toast({title: "Articolo Pubblicato", description: `"${formData.title}" è stato pubblicato con successo!`});
       // Reset form
-      setFormData({
-        title: '',
-        author: '',
-        content: '',
-        category: 'Lumina',
-        tags: '',
-        publishedAt: new Date().toISOString().slice(0, 10),
-        excerpt: '',
-        contentBlocks: [],
-      });
+      setFormData(createInitialFormData());
     } else {
       toast({ title: "Errore", description: result.error, variant: "destructive" });
     }
@@ -253,7 +159,7 @@ export default function ArticleSubmission() {
     const dateOnly = article.published_at ? article.published_at.slice(0, 10) : '';
     
     // Parse content blocks from article if they exist
-    const contentBlocks: ContentBlock[] = article.content_blocks || [];
+    const contentBlocks = article.content_blocks || [];
     
     setEditForm({
       id: article.id,
@@ -640,42 +546,16 @@ export default function ArticleSubmission() {
                                 </>
                               )}
                               <div>
-                                <div className="flex items-center justify-between">
-                                  <Label className="text-xs text-slate-500">Contenuto</Label>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const textarea = document.getElementById(`block-content-${index}`) as HTMLTextAreaElement;
-                                      if (textarea) {
-                                        const start = textarea.selectionStart;
-                                        const end = textarea.selectionEnd;
-                                        const currentContent = block.content || '';
-                                        const template = '[inserisci qui il tuo testo](inserisci qui il tuo link)';
-                                        const newContent = currentContent.substring(0, start) + template + currentContent.substring(end);
-                                        updateBlock(index, { content: newContent });
-                                        // Focus and select the template text after update
-                                        setTimeout(() => {
-                                          textarea.focus();
-                                          textarea.setSelectionRange(start, start + template.length);
-                                        }, 0);
-                                      }
-                                    }}
-                                    className="text-xs flex items-center gap-1 text-sky hover:text-sky-700 px-2 py-1 rounded hover:bg-sky-50 transition-colors"
-                                  >
-                                    <ExternalLink className="w-3 h-3" />
-                                    Inserisci link
-                                  </button>
-                                </div>
-                                <Textarea
-                                  id={`block-content-${index}`}
-                                  value={block.content}
-                                  onChange={(e) => updateBlock(index, { content: e.target.value })}
+                                <Label className="text-xs text-slate-500 mb-2 block">Contenuto</Label>
+                                <RichTextEditor
+                                  value={block.content || ''}
+                                  onChange={(html) => updateBlock(index, { content: html })}
                                   placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
                                   rows={block.type === 'textbox' ? 4 : 6}
-                                  className="mt-1 text-sm resize-y whitespace-pre-wrap"
+                                  className="mt-1"
                                 />
                                 <p className="text-xs text-slate-400 mt-1">
-                                  Per creare un link: [testo](https://esempio.com) o clicca "Inserisci link"
+                                  Usa la toolbar per grassetto, corsivo e link. Oppure digita <code className="bg-slate-200 px-1 rounded text-[10px]">[testo](URL)</code> per i link. Puoi anche incollare testo formattato.
                                 </p>
                               </div>
                             </div>
@@ -697,9 +577,13 @@ export default function ArticleSubmission() {
                                 {formData.contentBlocks.map((block, index) => {
                                   if (block.type === 'paragraph') {
                                     return (
-                                      <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem] whitespace-pre-wrap">
-                                        {renderContentWithLinks(block.content) || <span className="text-slate-300 italic">Paragrafo vuoto...</span>}
-                                      </p>
+                                      <div key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                                        {block.content ? (
+                                          <RichTextContent html={block.content} />
+                                        ) : (
+                                          <span className="text-slate-300 italic">Paragrafo vuoto...</span>
+                                        )}
+                                      </div>
                                     );
                                   }
                                   if (block.type === 'textbox') {
@@ -711,8 +595,12 @@ export default function ArticleSubmission() {
                                             {block.title}
                                           </h3>
                                         )}
-                                        <div className="text-foreground/80 text-sm whitespace-pre-wrap leading-relaxed">
-                                          {renderContentWithLinks(block.content) || <span className="text-slate-400 italic">Contenuto vuoto...</span>}
+                                        <div className="text-foreground/80 text-sm leading-relaxed">
+                                          {block.content ? (
+                                            <RichTextContent html={block.content} />
+                                          ) : (
+                                            <span className="text-slate-400 italic">Contenuto vuoto...</span>
+                                          )}
                                         </div>
                                       </div>
                                     );
@@ -855,11 +743,11 @@ export default function ArticleSubmission() {
                         {/* Edit content */}
                         <div>
                           <Label className="text-xs font-semibold mb-1">Contenuto</Label>
-                          <Textarea
+                          <RichTextEditor
                             value={editForm.content}
-                            onChange={(e) => setEditForm({...editForm, content: e.target.value})}
-                            rows={6}
-                            className="text-sm font-mono"
+                            onChange={(html) => setEditForm({...editForm, content: html})}
+                            rows={8}
+                            className="mt-1"
                           />
                         </div>
 
@@ -896,7 +784,7 @@ export default function ArticleSubmission() {
                               </p>
                             )}
                             <p className="text-sm text-slate-600 line-clamp-2">
-                              {article.content.substring(0, 150)}...
+                              {stripHtml(article.content).substring(0, 150)}...
                             </p>
                             {article.tags.length > 0 && (
                               <div className="flex gap-1 mt-3">
