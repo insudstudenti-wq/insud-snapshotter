@@ -42,8 +42,7 @@ export type Article = {
 // Content block types for rich article content
 export type ContentBlock = 
   | { type: 'paragraph'; content: string }
-  | { type: 'textbox'; title: string; content: string; style?: 'default' | 'info' | 'warning' | 'success' }
-  | { type: 'link'; label: string; url: string; style?: 'default' | 'button' | 'outline' };
+  | { type: 'textbox'; title: string; content: string; style?: 'default' | 'info' | 'warning' | 'success' };
 
 export type ArticleWithRelations = Article & {
   author: Author;

@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, User, ExternalLink, Box, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, User, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { getArticleBySlug } from "@/lib/articleApi";
 import type { ArticleWithRelations, ContentBlock } from "@/lib/supabase";
@@ -16,20 +16,15 @@ const getReadTime = (content: string): string => {
   return `${minutes} min`;
 };
 
-// TextBox style configurations
+// TextBox style configurations (no icon)
 const textBoxStyles = {
-  default: { bg: 'bg-muted/50', border: 'border-border', icon: Box },
-  info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: Info },
-  warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: AlertTriangle },
-  success: { bg: 'bg-green-50', border: 'border-green-200', icon: CheckCircle },
+  default: { bg: 'bg-muted/50', border: 'border-border' },
+  info: { bg: 'bg-blue-50', border: 'border-blue-200' },
+  warning: { bg: 'bg-amber-50', border: 'border-amber-200' },
+  success: { bg: 'bg-green-50', border: 'border-green-200' },
 };
 
-// Link style configurations
-const linkStyles = {
-  default: 'text-sky hover:underline inline-flex items-center gap-1',
-  button: 'inline-block bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy/90 transition-colors',
-  outline: 'inline-block border-2 border-navy text-navy px-6 py-3 rounded-lg hover:bg-navy/10 transition-colors',
-};
+
 
 // Parse content blocks from article
 const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
@@ -58,16 +53,7 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
       continue;
     }
     
-    // Check for link pattern: [LINK: Label](URL)
-    const linkMatch = trimmedLine.match(/^\[LINK:\s*(.+?)\]\((.+?)\)$/i);
-    if (linkMatch) {
-      if (currentParagraph.trim()) {
-        blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
-        currentParagraph = '';
-      }
-      blocks.push({ type: 'link', label: linkMatch[1], url: linkMatch[2], style: 'default' });
-      continue;
-    }
+
     
     // Check if this might be textbox content (if previous line was a box marker)
     if (blocks.length > 0 && blocks[blocks.length - 1].type === 'textbox') {
@@ -114,40 +100,33 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
   return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: article.content }];
 };
 
-// Render content with link detection
+// Render content with markdown link detection [text](url)
 const renderContentWithLinks = (content: string) => {
-  // URL regex pattern
-  const urlRegex = /(https?:\/\/[^\s\]\)]+)/g;
+  if (!content) return null;
   
-  // Split content by URLs and render
-  const parts = content.split(urlRegex);
-  const matches = content.match(urlRegex) || [];
+  // Split by markdown links [text](url)
+  const parts = content.split(/(\[.*?\]\(.*?\))/g);
   
-  const result: React.ReactNode[] = [];
-  
-  parts.forEach((part, index) => {
-    // Add the text part
-    if (part) {
-      result.push(<span key={`text-${index}`}>{part}</span>);
-    }
-    // Add the URL if exists
-    if (matches[index]) {
-      result.push(
+  return parts.map((part, index) => {
+    // Check for markdown link [text](url)
+    const markdownMatch = part.match(/^\[(.+?)\]\((.+?)\)$/);
+    if (markdownMatch) {
+      const [, text, url] = markdownMatch;
+      return (
         <a
-          key={`link-${index}`}
-          href={matches[index]}
+          key={index}
+          href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 text-sky hover:underline font-medium transition-colors"
+          className="text-sky hover:underline"
         >
-          <ExternalLink className="w-3 h-3" />
-          {matches[index]}
+          {text}
         </a>
       );
     }
+    // Return plain text
+    return <span key={index}>{part}</span>;
   });
-  
-  return result;
 };
 
 const ArticleDynamicPage = () => {
@@ -253,7 +232,7 @@ const ArticleDynamicPage = () => {
               {contentBlocks.map((block, index) => {
                 if (block.type === 'paragraph') {
                   return (
-                    <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                    <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem] whitespace-pre-wrap">
                       {renderContentWithLinks(block.content)}
                     </p>
                   );
@@ -261,7 +240,6 @@ const ArticleDynamicPage = () => {
                 
                 if (block.type === 'textbox') {
                   const style = textBoxStyles[block.style || 'default'];
-                  const Icon = style.icon;
                   
                   return (
                     <div 
@@ -269,31 +247,13 @@ const ArticleDynamicPage = () => {
                       className={`mt-8 p-6 ${style.bg} border ${style.border} rounded-2xl`}
                     >
                       {block.title && (
-                        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                          <Icon className="w-5 h-5" />
+                        <h3 className="text-lg font-semibold text-foreground mb-4">
                           {block.title}
                         </h3>
                       )}
                       <div className="text-foreground/80 text-[1.05rem] leading-relaxed whitespace-pre-wrap">
                         {renderContentWithLinks(block.content)}
                       </div>
-                    </div>
-                  );
-                }
-                
-                if (block.type === 'link') {
-                  const linkStyle = linkStyles[block.style || 'default'];
-                  return (
-                    <div key={index} className="my-6">
-                      <a
-                        href={block.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={linkStyle}
-                      >
-                        {block.label}
-                        <ExternalLink className="w-4 h-4" />
-                      </a>
                     </div>
                   );
                 }

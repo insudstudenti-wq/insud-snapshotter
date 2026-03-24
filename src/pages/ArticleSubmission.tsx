@@ -9,12 +9,12 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
 import type { ArticleWithRelations, ContentBlock } from '@/lib/supabase';
-import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff, Link as LinkIcon } from 'lucide-react';
+import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff, Link as LinkIcon, ExternalLink } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 
 type Tool = 'publish' | 'manage';
-type BlockType = 'paragraph' | 'textbox' | 'link';
+type BlockType = 'paragraph' | 'textbox';
 
 // Complete interface with all fields
 interface ArticleFormData {
@@ -56,19 +56,41 @@ const formatDateDisplay = (isoTimestamp: string): string => {
   });
 };
 
-// TextBox styles
+// TextBox styles (no icon)
 const textBoxStyles = {
-  default: { bg: 'bg-muted/50', border: 'border-border', icon: Box },
-  info: { bg: 'bg-blue-50', border: 'border-blue-200', icon: Type },
-  warning: { bg: 'bg-amber-50', border: 'border-amber-200', icon: Type },
-  success: { bg: 'bg-green-50', border: 'border-green-200', icon: Type },
+  default: { bg: 'bg-muted/50', border: 'border-border' },
+  info: { bg: 'bg-blue-50', border: 'border-blue-200' },
+  warning: { bg: 'bg-amber-50', border: 'border-amber-200' },
+  success: { bg: 'bg-green-50', border: 'border-green-200' },
 };
 
-// Link styles
-const linkStyles = {
-  default: { className: 'text-sky hover:underline', label: 'Default' },
-  button: { className: 'inline-block bg-navy text-white px-6 py-3 rounded-lg hover:bg-navy/90 transition-colors', label: 'Bottone' },
-  outline: { className: 'inline-block border-2 border-navy text-navy px-6 py-3 rounded-lg hover:bg-navy/10 transition-colors', label: 'Outline' },
+
+
+// Render content with markdown links [text](url)
+const renderContentWithLinks = (content: string) => {
+  if (!content) return null;
+  
+  // Split by markdown links [text](url)
+  const parts = content.split(/(\[.*?\]\(.*?\))/g);
+  
+  return parts.map((part, index) => {
+    const match = part.match(/^\[(.+?)\]\((.+?)\)$/);
+    if (match) {
+      const [, text, url] = match;
+      return (
+        <a
+          key={index}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sky hover:underline"
+        >
+          {text}
+        </a>
+      );
+    }
+    return <span key={index}>{part}</span>;
+  });
 };
 
 export default function ArticleSubmission() {
@@ -126,12 +148,9 @@ export default function ArticleSubmission() {
 
   // Content Block Management
   const addBlock = (type: BlockType) => {
-    const newBlock: ContentBlock = 
-      type === 'paragraph' 
-        ? { type: 'paragraph', content: '' }
-        : type === 'textbox'
-        ? { type: 'textbox', title: '', content: '', style: 'default' }
-        : { type: 'link', label: '', url: '', style: 'default' };
+    const newBlock: ContentBlock = type === 'paragraph' 
+      ? { type: 'paragraph', content: '' }
+      : { type: 'textbox', title: '', content: '', style: 'default' };
     
     setFormData(prev => ({
       ...prev,
@@ -175,8 +194,7 @@ export default function ArticleSubmission() {
     return formData.contentBlocks
       .map(block => {
         if (block.type === 'paragraph') return block.content;
-        if (block.type === 'textbox') return `[BOX: ${block.title}]\n${block.content}`;
-        if (block.type === 'link') return `[LINK: ${block.label}](${block.url})`;
+        if (block.type === 'textbox') return `[BOX: ${block.title || 'Box'}]\n${block.content}`;
         return '';
       })
       .filter(Boolean)
@@ -529,16 +547,6 @@ export default function ArticleSubmission() {
                           <Box className="w-4 h-4" />
                           Text Box
                         </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => addBlock('link')}
-                          className="flex items-center gap-1 bg-white"
-                        >
-                          <LinkIcon className="w-4 h-4" />
-                          Link
-                        </Button>
                       </div>
                     </div>
 
@@ -573,7 +581,7 @@ export default function ArticleSubmission() {
                               <div className="flex items-center gap-2">
                                 <GripVertical className="w-4 h-4 text-slate-400" />
                                 <span className="text-xs font-medium text-slate-600">
-                                  {block.type === 'paragraph' ? 'Paragrafo' : block.type === 'textbox' ? 'Text Box' : 'Link'}
+                                  {block.type === 'paragraph' ? 'Paragrafo' : 'Text Box'}
                                 </span>
                               </div>
                               <div className="flex items-center gap-1">
@@ -631,53 +639,45 @@ export default function ArticleSubmission() {
                                   </div>
                                 </>
                               )}
-                              {block.type === 'link' && (
-                                <>
-                                  <div>
-                                    <Label className="text-xs text-slate-500">Stile Link</Label>
-                                    <select
-                                      value={block.style || 'default'}
-                                      onChange={(e) => updateBlock(index, { style: e.target.value as 'default' | 'button' | 'outline' })}
-                                      className="mt-1 w-full text-sm border border-slate-200 rounded px-2 py-1"
-                                    >
-                                      <option value="default">Default (testo)</option>
-                                      <option value="button">Bottone</option>
-                                      <option value="outline">Outline</option>
-                                    </select>
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs text-slate-500">Testo del Link</Label>
-                                    <Input
-                                      value={block.label}
-                                      onChange={(e) => updateBlock(index, { label: e.target.value })}
-                                      placeholder="Clicca qui..."
-                                      className="mt-1 h-9 text-sm"
-                                    />
-                                  </div>
-                                  <div>
-                                    <Label className="text-xs text-slate-500">URL (indirizzo)</Label>
-                                    <Input
-                                      type="url"
-                                      value={block.url}
-                                      onChange={(e) => updateBlock(index, { url: e.target.value })}
-                                      placeholder="https://www.esempio.com"
-                                      className="mt-1 h-9 text-sm"
-                                    />
-                                  </div>
-                                </>
-                              )}
-                              {block.type !== 'link' && (
-                                <div>
+                              <div>
+                                <div className="flex items-center justify-between">
                                   <Label className="text-xs text-slate-500">Contenuto</Label>
-                                  <Textarea
-                                    value={block.content}
-                                    onChange={(e) => updateBlock(index, { content: e.target.value })}
-                                    placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
-                                    rows={block.type === 'textbox' ? 4 : 6}
-                                    className="mt-1 text-sm resize-y"
-                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const textarea = document.getElementById(`block-content-${index}`) as HTMLTextAreaElement;
+                                      if (textarea) {
+                                        const start = textarea.selectionStart;
+                                        const end = textarea.selectionEnd;
+                                        const currentContent = block.content || '';
+                                        const template = '[inserisci qui il tuo testo](inserisci qui il tuo link)';
+                                        const newContent = currentContent.substring(0, start) + template + currentContent.substring(end);
+                                        updateBlock(index, { content: newContent });
+                                        // Focus and select the template text after update
+                                        setTimeout(() => {
+                                          textarea.focus();
+                                          textarea.setSelectionRange(start, start + template.length);
+                                        }, 0);
+                                      }
+                                    }}
+                                    className="text-xs flex items-center gap-1 text-sky hover:text-sky-700 px-2 py-1 rounded hover:bg-sky-50 transition-colors"
+                                  >
+                                    <ExternalLink className="w-3 h-3" />
+                                    Inserisci link
+                                  </button>
                                 </div>
-                              )}
+                                <Textarea
+                                  id={`block-content-${index}`}
+                                  value={block.content}
+                                  onChange={(e) => updateBlock(index, { content: e.target.value })}
+                                  placeholder={block.type === 'paragraph' ? "Scrivi il paragrafo..." : "Contenuto del box..."}
+                                  rows={block.type === 'textbox' ? 4 : 6}
+                                  className="mt-1 text-sm resize-y whitespace-pre-wrap"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">
+                                  Per creare un link: [testo](https://esempio.com) o clicca "Inserisci link"
+                                </p>
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -697,44 +697,23 @@ export default function ArticleSubmission() {
                                 {formData.contentBlocks.map((block, index) => {
                                   if (block.type === 'paragraph') {
                                     return (
-                                      <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
-                                        {block.content || <span className="text-slate-300 italic">Paragrafo vuoto...</span>}
+                                      <p key={index} className="text-foreground/90 leading-relaxed text-[1.05rem] whitespace-pre-wrap">
+                                        {renderContentWithLinks(block.content) || <span className="text-slate-300 italic">Paragrafo vuoto...</span>}
                                       </p>
                                     );
                                   }
                                   if (block.type === 'textbox') {
                                     const style = textBoxStyles[block.style || 'default'];
-                                    const Icon = style.icon;
                                     return (
                                       <div key={index} className={`mt-6 p-5 ${style.bg} border ${style.border} rounded-xl`}>
                                         {block.title && (
-                                          <h3 className="text-lg font-semibold text-foreground mb-3 flex items-center gap-2">
-                                            <Icon className="w-5 h-5" />
+                                          <h3 className="text-lg font-semibold text-foreground mb-3">
                                             {block.title}
                                           </h3>
                                         )}
-                                        <div className="text-foreground/80 text-sm whitespace-pre-wrap">
-                                          {block.content || <span className="text-slate-400 italic">Contenuto vuoto...</span>}
+                                        <div className="text-foreground/80 text-sm whitespace-pre-wrap leading-relaxed">
+                                          {renderContentWithLinks(block.content) || <span className="text-slate-400 italic">Contenuto vuoto...</span>}
                                         </div>
-                                      </div>
-                                    );
-                                  }
-                                  if (block.type === 'link') {
-                                    const style = linkStyles[block.style || 'default'];
-                                    return (
-                                      <div key={index} className="my-4">
-                                        {block.url ? (
-                                          <a
-                                            href={block.url}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className={style.className}
-                                          >
-                                            {block.label || 'Link'}
-                                          </a>
-                                        ) : (
-                                          <span className="text-slate-400 italic">Link senza URL...</span>
-                                        )}
                                       </div>
                                     );
                                   }
