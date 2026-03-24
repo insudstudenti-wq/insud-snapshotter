@@ -47,7 +47,7 @@ const Navbar = () => {
             href="https://www.instagram.com/insud.bocconi?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Visita il profilo Instagram di InSud Bocconi"
+            aria-label="Visita il profilo Instagram di InSud"
             className="text-primary-foreground/60 hover:text-primary-foreground transition-colors"
           >
             <Instagram className="w-5 h-5" />
