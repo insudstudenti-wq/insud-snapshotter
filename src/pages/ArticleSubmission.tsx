@@ -727,26 +727,6 @@ export default function ArticleSubmission() {
                     </div>
                   </div>
 
-                  {/* Legacy Content Field (Hidden but kept for compatibility) */}
-                  <div className="space-y-2">
-                    <Label htmlFor="content" className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-                      Contenuto Plain Text
-                      <Badge variant="secondary" className="text-xs">Legacy</Badge>
-                    </Label>
-                    <Textarea
-                      id="content"
-                      name="content"
-                      rows={6}
-                      placeholder="Contenuto in formato testo (backup se i blocchi sono vuoti)..."
-                      value={formData.content}
-                      onChange={handleChange}
-                      className="border-slate-200 focus:border-indigo-500 resize-y font-mono text-sm leading-relaxed"
-                    />
-                    <p className="text-xs text-slate-500">
-                      Usato come fallback se i Content Blocks sono vuoti. Verrà automaticamente sincronizzato con i blocchi.
-                    </p>
-                  </div>
-
                   {/* Tags */}
                   <div className="space-y-2">
                     <Label htmlFor="tags" className="text-sm font-semibold text-slate-700">
