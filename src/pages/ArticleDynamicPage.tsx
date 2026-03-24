@@ -200,13 +200,24 @@ const ArticleDynamicPage = () => {
       <article className="pt-28 pb-20">
         <div className="container mx-auto px-4 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-            <Link to="/lumina_dynamic">
-              <Button variant="ghost" className="gap-2 mb-8 -ml-2 text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="w-4 h-4" /> Torna a LUMINA
-              </Button>
-            </Link>
+            {/* Top row: Back button on left, Tags on right */}
+            <div className="flex items-center justify-between mb-4">
+              <Link to="/lumina_dynamic">
+                <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground -ml-2">
+                  <ArrowLeft className="w-4 h-4" /> Torna a LUMINA
+                </Button>
+              </Link>
+              <div className="flex flex-wrap gap-2 justify-end">
+                {article.tags.length > 0 ? (
+                  article.tags.map((tag) => (
+                    <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
+                  ))
+                ) : (
+                  <Badge variant="secondary">LUMINA</Badge>
+                )}
+              </div>
+            </div>
 
-            <Badge variant="secondary" className="mb-4">{article.category?.name || 'LUMINA'}</Badge>
             <h1 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6 leading-tight">
               {article.title}
             </h1>
@@ -261,17 +272,6 @@ const ArticleDynamicPage = () => {
                 return null;
               })}
             </div>
-
-            {article.tags.length > 0 && (
-              <div className="mt-10 p-6 bg-muted/50 border border-border rounded-2xl">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Tag</h3>
-                <div className="flex flex-wrap gap-2">
-                  {article.tags.map((tag) => (
-                    <Badge key={tag.id} variant="secondary">{tag.name}</Badge>
-                  ))}
-                </div>
-              </div>
-            )}
 
             <div className="mt-16 pt-8 border-t border-border text-center">
               <Link to="/lumina_dynamic">
