@@ -170,7 +170,7 @@ const ArticleDynamicPage = () => {
         <div className="container mx-auto px-4 pt-32 pb-20 text-center">
           <h1 className="text-3xl font-bold text-foreground mb-4">Articolo non trovato</h1>
           <p className="text-muted-foreground mb-8">L&apos;articolo che cerchi non esiste.</p>
-          <Link to="/lumina_dynamic">
+          <Link to="/lumina">
             <Button variant="outline" className="gap-2 rounded-full">
               <ArrowLeft className="w-4 h-4" /> Torna a LUMINA DYNAMIC
             </Button>
@@ -202,7 +202,7 @@ const ArticleDynamicPage = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             {/* Top row: Back button on left, Tags on right */}
             <div className="flex items-center justify-between mb-4">
-              <Link to="/lumina_dynamic">
+              <Link to="/lumina">
                 <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground -ml-2">
                   <ArrowLeft className="w-4 h-4" /> Torna a LUMINA
                 </Button>
@@ -274,7 +274,7 @@ const ArticleDynamicPage = () => {
             </div>
 
             <div className="mt-16 pt-8 border-t border-border text-center">
-              <Link to="/lumina_dynamic">
+              <Link to="/lumina">
                 <Button variant="outline" className="gap-2 rounded-full">
                   <ArrowLeft className="w-4 h-4" /> Torna a LUMINA
                 </Button>

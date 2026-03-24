@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { BookOpen, Award, Search, Layers, ArrowRight, ArrowLeft, Clock, Calendar, User } from "lucide-react";
+import { BookOpen, Award, Search, Layers, ArrowRight, Clock, Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -162,7 +162,7 @@ const LuminaDynamic = () => {
           ) : (
             <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
               {articles.map((article, i) => (
-                <Link key={article.slug} to={`/article_dynamic/${article.slug}`}>
+                <Link key={article.slug} to={`/lumina/${article.slug}`}>
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -202,13 +202,6 @@ const LuminaDynamic = () => {
             </div>
           )}
           
-          <div className="text-center mt-8">
-            <Link to="/lumina">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="w-4 h-4" /> Vedi articoli statici
-              </Button>
-            </Link>
-          </div>
         </div>
       </section>
 

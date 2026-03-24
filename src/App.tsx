@@ -5,8 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import AperInsud from "./pages/AperInsud";
-import Lumina from "./pages/Lumina";
-import ArticlePage from "./pages/ArticlePage";
 import NotFound from "./pages/NotFound";
 import ArticleSubmission from './pages/ArticleSubmission';
 import LuminaDynamic from './pages/LuminaDynamic';
@@ -23,12 +21,10 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/aperinsud" element={<AperInsud />} />
-          <Route path="/lumina" element={<Lumina />} />
-          <Route path="/lumina/:slug" element={<ArticlePage />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/lumina" element={<LuminaDynamic />} />
+          <Route path="/lumina/:slug" element={<ArticleDynamicPage />} />
           <Route path="/lumina/submit" element={<ArticleSubmission />} />
-          <Route path="/lumina_dynamic" element={<LuminaDynamic />} />
-          <Route path="/article_dynamic/:slug" element={<ArticleDynamicPage />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
