@@ -101,28 +101,6 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
   return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: article.content }];
 };
 
-// Clean HTML content for safe rendering
-const cleanHtmlContent = (html: string): string => {
-  if (!html) return '';
-  
-  const tempDiv = document.createElement('div');
-  tempDiv.innerHTML = html;
-  
-  // Remove script and style tags for security
-  const scripts = tempDiv.querySelectorAll('script, style, iframe, object, embed');
-  scripts.forEach(el => el.remove());
-  
-  // Ensure links have proper attributes
-  const links = tempDiv.querySelectorAll('a');
-  links.forEach(link => {
-    link.setAttribute('target', '_blank');
-    link.setAttribute('rel', 'noopener noreferrer');
-    link.classList.add('text-sky', 'hover:underline');
-  });
-  
-  return tempDiv.innerHTML;
-};
-
 // Render content with markdown link detection [text](url) (fallback for plain text)
 const renderContentWithLinks = (content: string): React.ReactNode | { __html: string } => {
   if (!content) return null;

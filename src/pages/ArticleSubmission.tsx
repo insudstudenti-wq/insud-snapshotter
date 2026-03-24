@@ -9,9 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { submitArticle, getArticles, updateArticle, updateArticleTags, deleteArticle } from '@/lib/articleApi';
 import type { ArticleWithRelations, ContentBlock } from '@/lib/supabase';
-
-// Type for block updates
-type BlockUpdate = Partial<ContentBlock>;
 import {
   toEuropeanDate,
   formatDateDisplay,
@@ -28,6 +25,9 @@ import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User,
 import { RichTextEditor, RichTextContent } from '@/components/RichTextEditor';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+
+// Type for block updates
+type BlockUpdate = Partial<ContentBlock>;
 
 export default function ArticleSubmission() {
   const navigate = useNavigate();
