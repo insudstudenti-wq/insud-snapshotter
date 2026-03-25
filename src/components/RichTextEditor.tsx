@@ -74,8 +74,7 @@ export function RichTextEditor({
     const walker = document.createTreeWalker(
       tempDiv,
       NodeFilter.SHOW_TEXT,
-      null,
-      false
+      null
     );
     
     const textNodes: Text[] = [];
