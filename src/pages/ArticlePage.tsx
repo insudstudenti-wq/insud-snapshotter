@@ -1,4 +1,5 @@
 import { useParams, Link } from "react-router-dom";
+import type React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";

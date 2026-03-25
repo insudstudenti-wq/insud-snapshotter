@@ -1,4 +1,5 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
+import type React from 'react';
 import { Bold, Italic, Link as LinkIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
