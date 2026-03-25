@@ -138,7 +138,7 @@ const renderContentWithLinks = (content: string): React.ReactNode | { __html: st
 };
 
 // Type guard to check if content is HTML object
-const isHtmlObject = (content: React.ReactNode): content is { __html: string } => {
+const isHtmlObject = (content: unknown): content is { __html: string } => {
   return typeof content === 'object' && content !== null && '__html' in content;
 };
 
