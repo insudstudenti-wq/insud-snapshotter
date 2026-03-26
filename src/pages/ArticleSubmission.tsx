@@ -122,8 +122,8 @@ export default function ArticleSubmission() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Convert content blocks to plain text for storage
-    const plainContent = syncBlocksToContent(formData.contentBlocks) || formData.content;
+    // Convert content blocks to plain text for read time calculation only
+    const plainContent = syncBlocksToContent(formData.contentBlocks);
 
     // Convert ISO date + midnight time for database
     const fullTimestamp = formData.publishedAt + 'T00:00:00';
@@ -578,7 +578,7 @@ export default function ArticleSubmission() {
                                 {formData.contentBlocks.map((block, index) => {
                                   if (block.type === 'paragraph') {
                                     return (
-                                      <div key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
+                                      <div key={index} className="text-base leading-relaxed">
                                         {block.content ? (
                                           <RichTextContent html={block.content} />
                                         ) : (
@@ -596,7 +596,7 @@ export default function ArticleSubmission() {
                                             {block.title}
                                           </h3>
                                         )}
-                                        <div className="text-foreground/80 text-sm leading-relaxed">
+                                        <div className="text-base leading-relaxed">
                                           {block.content ? (
                                             <RichTextContent html={block.content} />
                                           ) : (
