@@ -51,7 +51,7 @@ export const textBoxStyles = {
   success: { bg: 'bg-green-50', border: 'border-green-200' },
 };
 
-// Render content with markdown links [text](url)
+// Render content with markdown links [text](url) - fallback for plain text
 export const renderContentWithLinks = (content: string): (JSX.Element | string)[] | null => {
   if (!content) return null;
   
@@ -78,8 +78,8 @@ export const renderContentWithLinks = (content: string): (JSX.Element | string)[
   });
 };
 
-// Clean HTML content for safe rendering
-export const cleanHtmlContent = (html: string): string => {
+// Normalize HTML content - preserve formatting but ensure uniform font size
+export const normalizeHtmlContent = (html: string): string => {
   if (!html) return '';
   
   // SSR-safe: return input as-is if document is not available
@@ -94,6 +94,25 @@ export const cleanHtmlContent = (html: string): string => {
   const scripts = tempDiv.querySelectorAll('script, style, iframe, object, embed');
   scripts.forEach(el => el.remove());
   
+  // Remove font-size inline styles to ensure uniform sizing via CSS
+  // but preserve bold, italic, and other formatting
+  const allElements = tempDiv.querySelectorAll('*');
+  allElements.forEach(el => {
+    const style = el.getAttribute('style');
+    if (style) {
+      // Remove font-size declarations but keep other styles
+      const cleanedStyle = style
+        .split(';')
+        .filter(s => !s.trim().startsWith('font-size'))
+        .join(';');
+      if (cleanedStyle.trim()) {
+        el.setAttribute('style', cleanedStyle);
+      } else {
+        el.removeAttribute('style');
+      }
+    }
+  });
+  
   // Ensure links have proper attributes and styling
   const links = tempDiv.querySelectorAll('a');
   links.forEach(link => {
@@ -105,7 +124,12 @@ export const cleanHtmlContent = (html: string): string => {
   return tempDiv.innerHTML;
 };
 
-// Strip HTML tags for plain text display
+// Clean HTML content for safe rendering (legacy function, kept for compatibility)
+export const cleanHtmlContent = (html: string): string => {
+  return normalizeHtmlContent(html);
+};
+
+// Strip HTML tags for plain text display (used for excerpts, previews)
 export const stripHtml = (html: string): string => {
   if (!html) return '';
   // SSR-safe: use regex fallback if document is not available
@@ -117,7 +141,7 @@ export const stripHtml = (html: string): string => {
   return tmp.textContent || tmp.innerText || '';
 };
 
-// Convert HTML to plain text while preserving line breaks
+// Convert HTML to plain text while preserving line breaks (for read time calculation only)
 export const htmlToPlainText = (html: string): string => {
   if (!html) return '';
   
@@ -134,12 +158,13 @@ export const htmlToPlainText = (html: string): string => {
   return (tempDiv.textContent || tempDiv.innerText || '').trim();
 };
 
-// Sync content blocks to plain text for backwards compatibility
+// Sync content blocks to plain text for backwards compatibility (read time calculation only)
+// NOTE: This is used ONLY for calculating read time, not for display
 export const syncBlocksToContent = (contentBlocks: ContentBlock[]): string => {
   return contentBlocks
     .map(block => {
       if (block.type === 'paragraph') return htmlToPlainText(block.content);
-      if (block.type === 'textbox') return `[BOX: ${block.title || 'Box'}]\n${htmlToPlainText(block.content)}`;
+      if (block.type === 'textbox') return htmlToPlainText(block.content);
       return '';
     })
     .filter(Boolean)
