@@ -9,14 +9,7 @@ import { ArrowLeft, Clock, Calendar, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { getArticleBySlug } from "@/lib/articleApi";
 import type { ArticleWithRelations, ContentBlock } from "@/lib/supabase";
-import { cleanHtmlContent } from "@/lib/articleSubmission";
-
-// Same read time calculation as old system
-const getReadTime = (content: string): string => {
-  const words = content.split(' ').length;
-  const minutes = Math.ceil(words / 200);
-  return `${minutes} min`;
-};
+import { normalizeHtmlContent, stripHtml } from "@/lib/articleSubmission";
 
 // TextBox style configurations (no icon)
 const textBoxStyles = {
@@ -26,8 +19,6 @@ const textBoxStyles = {
   success: { bg: 'bg-green-50', border: 'border-green-200' },
 };
 
-
-
 // Parse content blocks from article
 const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
   // If article has content_blocks stored, use those
@@ -35,111 +26,19 @@ const parseContentBlocks = (article: ArticleWithRelations): ContentBlock[] => {
     return article.content_blocks;
   }
   
-  // Otherwise, parse legacy format or split by newlines
-  const blocks: ContentBlock[] = [];
-  const lines = article.content.split('\n');
-  let currentParagraph = '';
-  
-  for (const line of lines) {
-    const trimmedLine = line.trim();
-    
-    // Check for textbox pattern: [BOX: Title] or similar
-    const boxMatch = trimmedLine.match(/^\[BOX:\s*(.+?)\]$/i);
-    if (boxMatch) {
-      // Save current paragraph if exists
-      if (currentParagraph.trim()) {
-        blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
-        currentParagraph = '';
-      }
-      // Text box content follows in next lines until empty line or next box
-      continue;
-    }
-    
-
-    
-    // Check if this might be textbox content (if previous line was a box marker)
-    if (blocks.length > 0 && blocks[blocks.length - 1].type === 'textbox') {
-      const lastBlock = blocks[blocks.length - 1];
-      if (!lastBlock.content && trimmedLine) {
-        // This is the first content line after box marker
-        lastBlock.content = trimmedLine;
-        continue;
-      } else if (lastBlock.content && trimmedLine) {
-        lastBlock.content += '\n' + trimmedLine;
-        continue;
-      }
-    }
-    
-    // Check for URL list pattern (links section)
-    const urlMatch = trimmedLine.match(/^(https?:\/\/\S+)\s*-\s*(.+)$/);
-    if (urlMatch && blocks.length > 0) {
-      // This is a link line, append to last textbox or create new one
-      const lastBlock = blocks[blocks.length - 1];
-      if (lastBlock && lastBlock.type === 'textbox') {
-        lastBlock.content += (lastBlock.content ? '\n' : '') + `[${urlMatch[2]}](${urlMatch[1]})`;
-        continue;
-      }
-    }
-    
-    // Regular paragraph content
-    if (trimmedLine) {
-      if (currentParagraph) {
-        currentParagraph += '\n' + trimmedLine;
-      } else {
-        currentParagraph = trimmedLine;
-      }
-    } else if (currentParagraph.trim()) {
-      blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
-      currentParagraph = '';
-    }
-  }
-  
-  // Don't forget the last paragraph
-  if (currentParagraph.trim()) {
-    blocks.push({ type: 'paragraph', content: currentParagraph.trim() });
-  }
-  
-  return blocks.length > 0 ? blocks : [{ type: 'paragraph', content: article.content }];
+  // Fallback: treat entire content as a single paragraph
+  // This handles legacy articles that don't have content_blocks
+  return [{ type: 'paragraph', content: article.content }];
 };
 
-// Render content with markdown link detection [text](url) (fallback for plain text)
-const renderContentWithLinks = (content: string): React.ReactNode | { __html: string } => {
-  if (!content) return null;
-  
-  // Check if content contains HTML
-  if (content.includes('<') && content.includes('>')) {
-    // Return as object to be used with dangerouslySetInnerHTML by caller
-    return { __html: cleanHtmlContent(content) };
-  }
-  
-  // Split by markdown links [text](url)
-  const parts = content.split(/(\[.*?\]\(.*?\))/g);
-  
-  return parts.map((part, index) => {
-    // Check for markdown link [text](url)
-    const markdownMatch = part.match(/^\[(.+?)\]\((.+?)\)$/);
-    if (markdownMatch) {
-      const [, text, url] = markdownMatch;
-      return (
-        <a
-          key={index}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-sky hover:underline"
-        >
-          {text}
-        </a>
-      );
-    }
-    // Return plain text
-    return <span key={index}>{part}</span>;
-  });
-};
-
-// Type guard to check if content is HTML object
-const isHtmlObject = (content: unknown): content is { __html: string } => {
-  return typeof content === 'object' && content !== null && '__html' in content;
+// Calculate read time from content blocks
+const getReadTimeFromBlocks = (blocks: ContentBlock[]): string => {
+  const totalText = blocks
+    .map(block => stripHtml(block.content))
+    .join(' ');
+  const words = totalText.split(/\s+/).filter(w => w.length > 0).length;
+  const minutes = Math.ceil(words / 200);
+  return `${minutes} min`;
 };
 
 const ArticleDynamicPage = () => {
@@ -243,7 +142,7 @@ const ArticleDynamicPage = () => {
                 <Calendar className="w-4 h-4" /> {formatDate(article.published_at)}
               </span>
               <span className="flex items-center gap-1.5">
-                <Clock className="w-4 h-4" /> {getReadTime(article.content)} di lettura
+                <Clock className="w-4 h-4" /> {getReadTimeFromBlocks(contentBlocks)} di lettura
               </span>
             </div>
 
@@ -255,26 +154,26 @@ const ArticleDynamicPage = () => {
             <div className="space-y-6 article-content">
               {contentBlocks.map((block, index) => {
                 if (block.type === 'paragraph') {
-                  const content = renderContentWithLinks(block.content);
-                  if (isHtmlObject(content)) {
-                    return (
-                      <div 
-                        key={index} 
-                        className="text-foreground/90 leading-relaxed text-[1.05rem]"
-                        dangerouslySetInnerHTML={content}
-                      />
-                    );
-                  }
+                  // Render HTML content directly (RichTextEditor outputs HTML)
+                  // Use CSS to ensure uniform font size while preserving bold, italic, links
+                  const normalizedHtml = normalizeHtmlContent(block.content);
                   return (
-                    <div key={index} className="text-foreground/90 leading-relaxed text-[1.05rem]">
-                      {content}
-                    </div>
+                    <div 
+                      key={index} 
+                      className="text-base leading-relaxed"
+                      style={{ 
+                        color: 'hsl(var(--foreground))',
+                      }}
+                      dangerouslySetInnerHTML={{ 
+                        __html: normalizedHtml 
+                      }}
+                    />
                   );
                 }
                 
                 if (block.type === 'textbox') {
                   const style = textBoxStyles[block.style || 'default'];
-                  const content = renderContentWithLinks(block.content);
+                  const normalizedHtml = normalizeHtmlContent(block.content);
                   
                   return (
                     <div 
@@ -286,16 +185,15 @@ const ArticleDynamicPage = () => {
                           {block.title}
                         </h3>
                       )}
-                      {isHtmlObject(content) ? (
-                        <div 
-                          className="text-foreground/80 text-[1.05rem] leading-relaxed"
-                          dangerouslySetInnerHTML={content}
-                        />
-                      ) : (
-                        <div className="text-foreground/80 text-[1.05rem] leading-relaxed">
-                          {content}
-                        </div>
-                      )}
+                      <div 
+                        className="text-base leading-relaxed"
+                        style={{ 
+                          color: 'hsl(var(--foreground) / 0.9)',
+                        }}
+                        dangerouslySetInnerHTML={{ 
+                          __html: normalizedHtml 
+                        }}
+                      />
                     </div>
                   );
                 }
