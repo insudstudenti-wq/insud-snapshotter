@@ -117,7 +117,7 @@ const LuminaDynamic = () => {
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl">
+          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {highlights.map((h, i) => (
               <motion.div
                 key={h.title}
