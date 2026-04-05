@@ -109,7 +109,7 @@ const LuminaDynamic = () => {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="max-w-3xl mb-16"
+            className="max-w-3xl mx-auto text-center mb-16"
           >
             <h2 className="text-3xl font-bold text-foreground mb-6">Cos'è LUMINA?</h2>
             <p className="text-muted-foreground leading-relaxed text-lg">
