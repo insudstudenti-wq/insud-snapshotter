@@ -112,7 +112,7 @@ const LuminaDynamic = () => {
             className="max-w-3xl mx-auto text-center mb-16"
           >
             <h2 className="text-3xl font-bold text-foreground mb-6">Cos'è LUMINA?</h2>
-            <p className="text-muted-foreground leading-relaxed text-lg">
+            <p className="text-muted-foreground leading-relaxed text-lg text-left">
               LUMINA è il nostro progetto editoriale dedicato a raccontare le eccellenze, le innovazioni e le storie di successo che nascono dal Sud Italia. Attraverso articoli approfonditi e serie tematiche, diamo voce a chi sta facendo la differenza nel Meridione, ispirando le nuove generazioni.
             </p>
           </motion.div>
