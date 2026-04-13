@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound";
 import ArticleSubmission from './pages/ArticleSubmission';
 import LuminaDynamic from './pages/LuminaDynamic';
 import ArticleDynamicPage from './pages/ArticleDynamicPage';
+import Events from './pages/Events';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/lumina" element={<LuminaDynamic />} />
           <Route path="/lumina/:slug" element={<ArticleDynamicPage />} />
           <Route path="/lumina/submit" element={<ArticleSubmission />} />
+          <Route path="/events" element={<Events />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
