@@ -22,10 +22,11 @@ import {
   type ArticleFormData,
   type EditingArticle,
 } from '@/lib/articleSubmission';
-import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff } from 'lucide-react';
+import { PlusCircle, Settings, Trash2, Edit2, Save, X, FileText, Calendar, User, Tag, Type, Box, GripVertical, ArrowUp, ArrowDown, Eye, EyeOff, Menu } from 'lucide-react';
 import { RichTextEditor, RichTextContent } from '@/components/RichTextEditor';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Type for block updates
 type BlockUpdate = Partial<ContentBlock>;
@@ -33,6 +34,8 @@ type BlockUpdate = Partial<ContentBlock>;
 export default function ArticleSubmission() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTool, setActiveTool] = useState<Tool>(() => {
     const saved = localStorage.getItem('lumina_editor_tool');
     return (saved as Tool) || 'publish';
@@ -40,6 +43,9 @@ export default function ArticleSubmission() {
   const handleToolChange = (tool: Tool) => {
     setActiveTool(tool);
     localStorage.setItem('lumina_editor_tool', tool);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
   
   // Publish form state
@@ -220,17 +226,36 @@ export default function ArticleSubmission() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f8fafc' }}>
+      {/* MOBILE SIDEBAR OVERLAY */}
+      {isMobile && sidebarOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            zIndex: 40,
+          }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* SIDEBAR */}
       <aside style={{ 
-        width: '280px', 
-        minWidth: '280px',
+        width: isMobile ? '280px' : '280px', 
+        minWidth: isMobile ? '280px' : '280px',
         backgroundColor: '#ffffff', 
         borderRight: '1px solid #e2e8f0',
         minHeight: '100vh',
         padding: '24px',
         display: 'block',
         flexShrink: 0,
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        position: isMobile ? 'fixed' : 'relative',
+        left: 0,
+        top: 0,
+        zIndex: 50,
+        transform: isMobile ? (sidebarOpen ? 'translateX(0)' : 'translateX(-100%)') : 'translateX(0)',
+        transition: isMobile ? 'transform 0.3s ease-in-out' : undefined,
       }}>
         <h2 style={{ 
           fontSize: '20px', 
@@ -312,11 +337,32 @@ export default function ArticleSubmission() {
       </aside>
 
       {/* MAIN CONTENT */}
-      <main style={{ flex: 1, padding: '32px', overflowY: 'auto', minWidth: 0 }}>
+      <main style={{ flex: 1, padding: isMobile ? '16px' : '32px', overflowY: 'auto', minWidth: 0 }}>
+        {/* Mobile Hamburger Button */}
+        {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(true)}
+            style={{
+              position: 'fixed',
+              top: '16px',
+              left: '16px',
+              zIndex: 30,
+              backgroundColor: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '10px',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            }}
+            aria-label="Apri menu"
+          >
+            <Menu className="w-6 h-6 text-slate-700" />
+          </button>
+        )}
         
         {/* PUBLISH TOOL */}
         {activeTool === 'publish' && (
-          <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+          <div style={{ maxWidth: '1200px', margin: '0 auto', marginTop: isMobile ? '48px' : 0 }}>
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader className="space-y-2 text-center pb-8">
                 <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -458,7 +504,7 @@ export default function ArticleSubmission() {
                     </div>
 
                     {/* Content Blocks Editor */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className={`grid grid-cols-1 ${isMobile ? '' : 'lg:grid-cols-2'} gap-6`}>
                       {/* Left: Block Editor */}
                       <div className="space-y-3">
                         <Label className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
@@ -647,7 +693,7 @@ export default function ArticleSubmission() {
 
         {/* MANAGE TOOL */}
         {activeTool === 'manage' && (
-          <div>
+          <div style={{ marginTop: isMobile ? '48px' : 0 }}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-slate-800">Gestione Articoli</h2>
               <Button onClick={loadArticles} variant="outline" size="sm">

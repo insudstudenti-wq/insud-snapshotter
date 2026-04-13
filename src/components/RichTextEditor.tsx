@@ -302,7 +302,7 @@ export function RichTextEditor({
         onKeyUp={handleKeyUp}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
-        className="rich-text-editor p-3 min-h-[120px] text-sm outline-none whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400"
+        className="rich-text-editor p-3 min-h-[120px] text-base outline-none whitespace-pre-wrap empty:before:content-[attr(data-placeholder)] empty:before:text-slate-400"
         data-placeholder={placeholder}
         style={{ minHeight: `${rows * 20}px` }}
         suppressContentEditableWarning

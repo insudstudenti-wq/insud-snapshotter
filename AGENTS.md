@@ -23,6 +23,7 @@ This document provides essential information for AI coding agents working on the
 | State Management | TanStack Query (React Query) 5.83+ |
 | Backend | Supabase |
 | Forms | React Hook Form + Zod |
+| Animation | Framer Motion |
 | Testing | Vitest 3.2+ with jsdom |
 | Linting | ESLint 9 with typescript-eslint |
 
@@ -31,7 +32,7 @@ This document provides essential information for AI coding agents working on the
 ```
 src/
 ├── components/
-│   ├── ui/              # 40+ shadcn/ui components
+│   ├── ui/              # 48 shadcn/ui components
 │   │   ├── button.tsx
 │   │   ├── card.tsx
 │   │   ├── dialog.tsx
@@ -42,26 +43,27 @@ src/
 │   ├── MissionSection.tsx
 │   ├── Navbar.tsx       # Navigation component
 │   ├── NavLink.tsx      # Navigation link helper
-│   └── ProjectsSection.tsx
-├── pages/               # Route-level components
+│   ├── ProjectsSection.tsx
+│   └── RichTextEditor.tsx  # Custom rich text editor component
+├── pages/               # 8 route-level components
 │   ├── Index.tsx        # Homepage
 │   ├── AperInsud.tsx    # AperInsud event page
-│   ├── Lumina.tsx       # Article listing (static)
-│   ├── LuminaDynamic.tsx # Article listing (Supabase)
-│   ├── ArticlePage.tsx  # Static article detail
+│   ├── Lumina.tsx       # Article listing (static - legacy)
+│   ├── LuminaDynamic.tsx # Article listing (Supabase-powered)
+│   ├── ArticlePage.tsx  # Static article detail (legacy)
 │   ├── ArticleDynamicPage.tsx # Dynamic article from DB
-│   ├── ArticleSubmission.tsx # Article submission form
+│   ├── ArticleSubmission.tsx # Article submission/management interface
 │   └── NotFound.tsx     # 404 page
 ├── hooks/
-│   ├── use-mobile.tsx   # Mobile breakpoint detection
+│   ├── use-mobile.tsx   # Mobile breakpoint detection (768px)
 │   └── use-toast.ts     # Toast notification hook
 ├── lib/
 │   ├── utils.ts         # cn() utility for Tailwind classes
 │   ├── supabase.ts      # Supabase client & TypeScript types
-│   └── articleApi.ts    # Article CRUD operations
+│   ├── articleApi.ts    # Article CRUD operations
+│   └── articleSubmission.tsx # Article submission utilities
 ├── data/
-│   └── articles.ts      # Static article data
-├── assets/              # Images and logos
+│   └── articles.ts      # Static article data (legacy articles)
 ├── test/
 │   ├── setup.ts         # Test environment setup
 │   └── example.test.ts  # Sample test
@@ -109,13 +111,17 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
 
 **Note**: These are required for the dynamic article features (LuminaDynamic, ArticleDynamicPage, ArticleSubmission) to function.
 
+**Security Note**: The `.env.local` file is already in `.gitignore` and should never be committed. The Supabase anon key is safe to use in client-side code (it's publishable).
+
 ## Code Style Guidelines
 
 ### TypeScript Configuration
-- **Strict mode is disabled** (`strict: false` in tsconfig)
-- Unused variables and parameters are allowed (configured in eslint)
-- Type checking is relaxed for faster development
+- **Strict mode is disabled** (`strict: false` in tsconfig.app.json)
+- `noImplicitAny: false` - allows implicit any types
+- `noUnusedLocals: false` - unused variables are allowed
+- `noUnusedParameters: false` - unused parameters are allowed
 - Path aliases use `@/*` pointing to `./src/*`
+- Vitest globals are enabled (no need to import `describe`, `it`, `expect`)
 
 ### Component Patterns
 ```typescript
@@ -127,28 +133,37 @@ const ComponentName = () => {
 export default ComponentName;
 ```
 
-### Styling Conventions
-- Use Tailwind CSS utility classes
-- Use the `cn()` utility from `@/lib/utils` for conditional classes
-- Custom color tokens defined in `tailwind.config.ts`:
-  - `--navy`: Primary brand color (hsl(213 70% 15%))
-  - `--sky`: Accent color (hsl(213 80% 55%))
-- Custom utility classes:
-  - `.text-gradient`: Gradient text effect
-  - `.bg-navy-gradient`: Navy gradient background
-  - `.bg-navy-solid`: Solid navy background
-
 ### Import Order
 1. React imports
 2. Third-party libraries
 3. `@/` aliases (project imports)
 4. Relative imports
 
+### Styling Conventions
+- Use Tailwind CSS utility classes
+- Use the `cn()` utility from `@/lib/utils` for conditional classes
+- Custom color tokens defined in `tailwind.config.ts` and `src/index.css`:
+  - `--navy`: Primary brand color (hsl(213 70% 15%))
+  - `--sky`: Accent color (hsl(213 80% 55%))
+- Custom utility classes in `index.css`:
+  - `.text-gradient`: Gradient text effect
+  - `.bg-navy-gradient`: Navy gradient background
+  - `.bg-navy-solid`: Solid navy background
+  - `.article-content`: Rich text content styling
+  - `.rich-text-content`: Rich text editor output styling
+
+### shadcn/ui Components
+All shadcn/ui components are located in `src/components/ui/`. These are:
+- Built on Radix UI primitives
+- Styled with Tailwind CSS
+- Fully typed with TypeScript
+- Use the `cn()` utility for class merging
+
 ## Testing Instructions
 
 Tests are written using **Vitest** with **jsdom** environment and **Testing Library**.
 
-- Test files: `src/**/*.test.ts` or `src/**/*.spec.ts`
+- Test files: `src/**/*.{test,spec}.{ts,tsx}`
 - Setup file: `src/test/setup.ts`
 - Globals are enabled (no need to import `describe`, `it`, `expect`)
 
@@ -161,40 +176,84 @@ describe("feature", () => {
 });
 ```
 
-## Key Features and Architecture
+The test setup includes a mock for `window.matchMedia` for responsive component testing.
 
-### Routing Structure
+## Routing Structure
+
 | Route | Component | Description |
 |-------|-----------|-------------|
 | `/` | Index | Homepage with all sections |
 | `/aperinsud` | AperInsud | Event information page |
-| `/lumina` | Lumina | Static article listing |
-| `/lumina/:slug` | ArticlePage | Static article detail |
-| `/lumina/submit` | ArticleSubmission | Article submission form |
-| `/lumina_dynamic` | LuminaDynamic | DB-powered article listing |
-| `/article_dynamic/:slug` | ArticleDynamicPage | DB-powered article detail |
+| `/lumina` | LuminaDynamic | Article listing (DB-powered) |
+| `/lumina/:slug` | ArticleDynamicPage | Dynamic article detail |
+| `/lumina/submit` | ArticleSubmission | Article submission/management interface |
 | `*` | NotFound | 404 error page |
 
-### Data Architecture
+**Note**: Legacy routes (`/lumina` with static data) have been replaced with dynamic Supabase-powered versions.
 
-**Static Articles**: Stored in `src/data/articles.ts`
+## Data Architecture
+
+### Static Articles (Legacy)
+Stored in `src/data/articles.ts`
 - Simple array of article objects
-- Used by `/lumina` and `/lumina/:slug` routes
+- Used only for reference/historical purposes
+- Each article has: slug, title, series, author, date, summary, content[]
 
-**Dynamic Articles**: Stored in Supabase
-- Tables: `articles`, `authors`, `categories`, `tags`, `article_tags`
-- Used by `/lumina_dynamic` and `/article_dynamic/:slug` routes
-- Full CRUD operations in `src/lib/articleApi.ts`
+### Dynamic Articles (Current)
+Stored in Supabase with the following schema:
 
-### UI Components
+**Tables:**
+- `articles`: Main article data
+  - id, title, slug, content, excerpt, author_id, category_id, published_at, content_blocks (JSON)
+- `authors`: Article authors
+  - id, name
+- `categories`: Article categories
+  - id, name, slug, description
+- `tags`: Article tags
+  - id, name, slug
+- `article_tags`: Many-to-many junction table
+  - article_id, tag_id
 
-The project uses **shadcn/ui** components located in `src/components/ui/`. These are:
-- Built on Radix UI primitives
-- Styled with Tailwind CSS
-- Fully typed with TypeScript
-- Can be customized as needed
+**TypeScript Types** (in `src/lib/supabase.ts`):
+```typescript
+type ContentBlock = 
+  | { type: 'paragraph'; content: string }
+  | { type: 'textbox'; title: string; content: string; style?: 'default' | 'info' | 'warning' | 'success' };
 
-Available components include: Accordion, Alert Dialog, Avatar, Badge, Button, Calendar, Card, Carousel, Chart, Checkbox, Command, Dialog, Dropdown Menu, Form, Input, Navigation Menu, Popover, Select, Sheet, Sidebar, Table, Tabs, Toast, Tooltip, and more.
+type ArticleWithRelations = Article & {
+  author: Author;
+  tags: Tag[];
+  category?: Category;
+  content_blocks?: ContentBlock[];
+};
+```
+
+### API Functions (src/lib/articleApi.ts)
+- `submitArticle()` - Create new article with content blocks
+- `getArticles()` - Fetch all articles with relations
+- `getArticleBySlug()` - Fetch single article by slug
+- `getArticlesByTag()` - Fetch articles by tag
+- `updateArticle()` - Update article data
+- `updateArticleTags()` - Update article tags
+- `deleteArticle()` - Delete article and tag associations
+- `getAllTags()` - Fetch all tags with article count
+- `getAllAuthors()` - Fetch all authors with article count
+
+## Rich Text Editor
+
+The project includes a custom rich text editor (`RichTextEditor.tsx`) for article content:
+
+**Features:**
+- Bold, italic formatting
+- Link insertion (with `[text](url)` markdown syntax support)
+- Paste handling that cleans unwanted formatting
+- Automatic markdown link conversion
+- SSR-safe rendering
+
+**Content Blocks:**
+Articles can be composed using content blocks:
+- **Paragraph**: Standard text block with rich formatting
+- **TextBox**: Styled callout boxes (default, info, warning, success variants)
 
 ## Security Considerations
 
@@ -202,6 +261,8 @@ Available components include: Accordion, Alert Dialog, Avatar, Badge, Button, Ca
 2. **Supabase Keys**: The anon key is safe to use in client-side code (it's publishable)
 3. **No Server Secrets**: This is a static SPA; all Supabase operations use Row Level Security
 4. **Form Validation**: All forms use Zod schemas for client-side validation
+5. **HTML Sanitization**: Rich text content is sanitized in `RichTextContent` component
+6. **XSS Protection**: Links automatically get `target="_blank"` and `rel="noopener noreferrer"`
 
 ## Deployment Notes
 
@@ -209,10 +270,15 @@ This project was initially created with **Lovable.dev**, a visual editor for Rea
 - A `lovable-tagger` plugin in development mode for component tagging
 - Deployment through the Lovable platform
 
-For manual deployment:
+**Build Configuration:**
 - Build output goes to `dist/` directory
 - Static hosting compatible (Vercel, Netlify, etc.)
 - Requires environment variables to be set in hosting platform
+
+**Vite Configuration:**
+- Dev server runs on port 8080
+- Uses `@vitejs/plugin-react-swc` for fast compilation
+- Path alias `@` resolves to `./src`
 
 ## Common Tasks
 
@@ -233,12 +299,26 @@ When working with Supabase:
 2. Update both the database AND the TypeScript types
 3. Update `src/lib/articleApi.ts` if API changes are needed
 
+### Working with the Article Editor
+The article submission interface (`/lumina/submit`) provides:
+- **Publish Tool**: Create new articles with content builder
+- **Manage Tool**: Edit, update, and delete existing articles
+- Content blocks support drag-and-drop reordering
+- Real-time preview of content blocks
+
 ## External Dependencies
 
 Key external services:
-- **Supabase**: Database and backend
+- **Supabase**: Database and backend (PostgreSQL)
 - **Google Fonts**: Inter font family loaded via CSS
 - **Lovable.dev**: Optional visual editing platform
+
+## Mobile Responsiveness
+
+- Mobile breakpoint: 768px (`useIsMobile()` hook)
+- Navbar collapses to hamburger menu on mobile
+- Article editor has mobile-optimized sidebar
+- All sections use responsive Tailwind classes
 
 ---
 
