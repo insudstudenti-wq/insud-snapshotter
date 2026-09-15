@@ -23,7 +23,7 @@ const HeroSection = () => {
           transition={{ duration: 0.7 }}
           className="text-4xl md:text-6xl lg:text-7xl font-extrabold text-primary-foreground leading-tight mb-6"
         >
-          InSud: Innovazione che parte{" "}
+          INSUD: Innovazione che parte{" "}
           <br />
           dal <span className="text-gradient">Sud</span>
         </motion.h1>
