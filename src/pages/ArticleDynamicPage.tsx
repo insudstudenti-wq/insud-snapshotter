@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Clock, Calendar, User } from "lucide-react";
+import { ArrowLeft, Clock, Calendar, User, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { getArticleBySlug } from "@/lib/articleApi";
 import type { ArticleWithRelations, ContentBlock } from "@/lib/supabase";
@@ -201,6 +201,26 @@ const ArticleDynamicPage = () => {
                 return null;
               })}
             </div>
+
+            {article.links && article.links.items?.length > 0 && (
+              <div className="mt-10 p-6 bg-navy/5 border border-border rounded-2xl">
+                <h3 className="text-lg font-semibold text-foreground mb-4">{article.links.title}</h3>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {article.links.items.map((link) => (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between gap-2 px-4 py-3 bg-card border border-border rounded-xl text-sm font-medium text-foreground hover:border-sky hover:text-sky transition-colors"
+                    >
+                      {link.label}
+                      <ExternalLink className="w-4 h-4 shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="mt-16 pt-8 border-t border-border text-center">
               <Link to="/lumina">

@@ -1,13 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
-}
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export { supabase } from '@/integrations/supabase/client';
 
 // Minimal types
 export type Author = {
@@ -40,13 +31,24 @@ export type Article = {
 };
 
 // Content block types for rich article content
-export type ContentBlock = 
+export type ContentBlock =
   | { type: 'paragraph'; content: string }
   | { type: 'textbox'; title: string; content: string; style?: 'default' | 'info' | 'warning' | 'success' };
+
+export type ArticleLink = {
+  label: string;
+  url: string;
+};
+
+export type ArticleLinks = {
+  title: string;
+  items: ArticleLink[];
+};
 
 export type ArticleWithRelations = Article & {
   author: Author;
   tags: Tag[];
   category?: Category;
   content_blocks?: ContentBlock[];
+  links?: ArticleLinks | null;
 };
