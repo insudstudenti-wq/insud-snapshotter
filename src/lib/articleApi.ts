@@ -200,9 +200,9 @@ export async function getArticleBySlug(slug: string): Promise<ArticleWithRelatio
   const tags = articleTags?.map((at: any) => at.tag).filter(Boolean) || [];
 
   return {
-    ...article,
+    ...(article as any),
     tags,
-  };
+  } as ArticleWithRelations;
 }
 
 // Get articles by tag
