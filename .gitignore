@@ -23,9 +23,4 @@ dist-ssr
 *.sln
 *.sw?
 
-# .gitignore
 .env.local
-.env
-
-# API endpoint for article submissions
-VITE_API_URL=http://localhost:3001
